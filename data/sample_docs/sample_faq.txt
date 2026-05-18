@@ -1,0 +1,36 @@
+PREGUNTAS FRECUENTES — SISTEMA INTERNO
+Empresa Demo S.A. | Departamento de TI
+
+P: ¿Cómo solicito acceso a las herramientas de trabajo?
+R: Envía un correo a soporte@empresademo.cl indicando las herramientas necesarias y
+la aprobación de tu jefatura. El tiempo de respuesta es de 1-2 días hábiles.
+
+P: ¿Qué hago si olvidé mi contraseña corporativa?
+R: Utiliza el portal de autogestión en intranet.empresademo.cl/reset o contacta al
+soporte técnico al interno 2200 o helpdesk@empresademo.cl.
+
+P: ¿Cómo reporto un incidente de seguridad?
+R: Los incidentes de seguridad deben reportarse inmediatamente al equipo de Seguridad
+TI mediante seguridad@empresademo.cl o llamando al +56 2 2345 6790. No intentes
+resolver el incidente por tu cuenta.
+
+P: ¿Cuánto espacio de almacenamiento tengo en la nube?
+R: Cada usuario tiene 50 GB en el sistema de almacenamiento corporativo. Para solicitar
+ampliación, contacta a tu supervisor y a almacenamiento@empresademo.cl.
+
+P: ¿Puedo usar dispositivos personales para el trabajo?
+R: Los dispositivos personales solo pueden usarse con aprobación previa del área de TI
+y deben cumplir la Política de Seguridad BYOD. Contacta a byod@empresademo.cl.
+
+P: ¿Cómo accedo al sistema de gestión de proyectos?
+R: El acceso se solicita a través del formulario F-TI-07 disponible en la intranet.
+Las credenciales se entregan dentro de 24 horas hábiles.
+
+P: ¿Qué hacer en caso de problemas con el VPN?
+R: Primero verifica tu conexión a internet. Si el problema persiste, reinicia el
+cliente VPN. Para soporte adicional: vpn@empresademo.cl o interno 2201.
+
+P: ¿Cómo se manejan los datos personales de clientes?
+R: Todos los datos personales se tratan según la Ley 19.628 de Protección de Datos.
+El responsable de datos es el DPO en privacidad@empresademo.cl. Los empleados no
+deben compartir datos de clientes fuera de los sistemas autorizados.
