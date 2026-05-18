@@ -44,10 +44,20 @@ POST /query {"query": "¿Cumplió el empleado 12.345.678-9?", "session_id": "...
      ├─ [5] Compression   →  sentence dedup + tiktoken trim  (MISS path only)
      ├─ [6] LLM call      →  Anthropic Haiku or GPT-4o-mini  (never sees raw PII)
      ├─ [7] PII restore   →  [uuid] → "12.345.678-9" in response
-     └─ [8] Async tasks   →  Telegram notification + CRM webhook (non-blocking)
+     └─ [8] Async tasks   →  Telegram (PII-free summary only) + CRM webhook (non-blocking)
 ```
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for full diagrams and design decisions.
+
+### Privacy guarantees
+
+| Boundary | What leaves the system |
+|----------|----------------------|
+| OpenAI Embeddings | Clean query text — PII replaced with `[uuid]` tokens |
+| Anthropic / OpenAI LLM | Compressed context + clean query — no raw PII |
+| PostgreSQL `pii_tokens` | UUID ↔ original value mapping, TTL 2h, for audit only |
+| Telegram notification | PII-type summary (`[PII: rut, email]`) and anonymized query — never the original value or the full response |
+| CRM webhook | Query hash, latency, cache status — no query text at all |
 
 ---
 

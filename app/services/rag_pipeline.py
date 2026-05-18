@@ -88,7 +88,7 @@ class RAGPipeline:
         clean_query, token_map, pii_types = self._scrubber.scrub(query_text)
         pii_found = bool(token_map)
 
-        # Persist PII tokens to DB for cross-request restoration
+        # Persist PII tokens to DB for audit/debug visibility with TTL
         if pii_found:
             await self._persist_pii_tokens(session_id, token_map, pii_types)
 
