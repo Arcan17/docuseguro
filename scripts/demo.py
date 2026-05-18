@@ -78,11 +78,6 @@ async def _show_verbose_pii_walkthrough() -> None:
     print("  > Document PII was also scrubbed at ingest — not restorable.")
 
 
-async def _show_verbose_ingest(doc_path: Path, chunk_count: int, pii_found: bool) -> None:
-    print(f"   {doc_path.name}")
-    print(f"     chunks: {chunk_count}  |  document PII scrubbed: {pii_found}")
-
-
 async def run_demo(verbose: bool = False) -> None:
     from app.core.logging import configure_logging
     from app.models.database import AsyncSessionLocal, create_tables

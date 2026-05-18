@@ -38,7 +38,7 @@ This system is especially relevant for Chilean companies or any business that ha
 POST /ingest (PDF / .txt)
      ├─ [1] Extract text  →  pypdf or utf-8 decode
      ├─ [2] PII Scrubber  →  RUT / email / phone replaced with [uuid] (document PII is NOT restorable — by design)
-     ├─ [3] Chunking      →  RecursiveCharacterTextSplitter (800 chars, 150 overlap)
+     ├─ [3] Chunking      →  Custom recursive splitter (\n\n → \n → ". " → " " → hard split, 800 chars, 150 overlap)
      ├─ [4] Embedding     →  OpenAI text-embedding-3-small  (clean chunks, no raw PII)
      └─ [5] Vector store  →  ChromaDB persistent (hnsw:space=cosine)
 
