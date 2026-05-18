@@ -35,15 +35,21 @@ This system is especially relevant for Chilean companies or any business that ha
 ## Architecture
 
 ```
+POST /ingest (PDF / .txt)
+     ├─ [1] Extract text  →  pypdf or utf-8 decode
+     ├─ [2] PII Scrubber  →  RUT / email / phone replaced with [uuid] (document PII is NOT restorable — by design)
+     ├─ [3] Chunking      →  RecursiveCharacterTextSplitter (800 chars, 150 overlap)
+     ├─ [4] Embedding     →  OpenAI text-embedding-3-small  (clean chunks, no raw PII)
+     └─ [5] Vector store  →  ChromaDB persistent (hnsw:space=cosine)
+
 POST /query {"query": "¿Cumplió el empleado 12.345.678-9?", "session_id": "..."}
-     │
-     ├─ [1] PII Scrubber  →  "12.345.678-9" replaced with [uuid]  (DB-persisted, TTL 2h)
-     ├─ [2] Embedding     →  OpenAI text-embedding-3-small  (clean text, no PII)
+     ├─ [1] PII Scrubber  →  "12.345.678-9" replaced with [uuid]  (token map kept in memory for this request)
+     ├─ [2] Embedding     →  OpenAI text-embedding-3-small  (clean query, no PII)
      ├─ [3] Vector search →  ChromaDB cosine ≥ 0.75  (low-quality chunks rejected)
      ├─ [4] Cache lookup  →  SHA256(query + context) → PostgreSQL  (HIT: return <20ms)
      ├─ [5] Compression   →  sentence dedup + tiktoken trim  (MISS path only)
      ├─ [6] LLM call      →  Anthropic Haiku or GPT-4o-mini  (never sees raw PII)
-     ├─ [7] PII restore   →  [uuid] → "12.345.678-9" in response
+     ├─ [7] PII restore   →  [uuid] → "12.345.678-9" in response  (in-memory, same request only)
      └─ [8] Async tasks   →  Telegram (PII-free summary only) + CRM webhook (non-blocking)
 ```
 
@@ -51,13 +57,16 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for full diagrams and design decisions.
 
 ### Privacy guarantees
 
-| Boundary | What leaves the system |
-|----------|----------------------|
-| OpenAI Embeddings | Clean query text — PII replaced with `[uuid]` tokens |
-| Anthropic / OpenAI LLM | Compressed context + clean query — no raw PII |
+| Boundary | What the external service receives |
+|----------|------------------------------------|
+| OpenAI Embeddings — ingest | Scrubbed document chunks — RUT/email/phone replaced by `[uuid]` before chunking |
+| OpenAI Embeddings — query | Scrubbed query text — same replacement before embedding call |
+| Anthropic / OpenAI LLM | Compressed scrubbed-document context + scrubbed query — no raw PII |
 | PostgreSQL `pii_tokens` | UUID ↔ original value mapping, TTL 2h, for audit only |
-| Telegram notification | PII-type summary (`[PII: rut, email]`) and anonymized query — never the original value or the full response |
+| Telegram notification | PII-type summary (`[PII: rut, email]`) + anonymized query — never the original value or the full LLM response |
 | CRM webhook | Query hash, latency, cache status — no query text at all |
+
+**Design note:** Document PII is intentionally not restorable from vector storage — the scrubbed text is what gets indexed and what the LLM reads. Query PII is restored only within the same request/response cycle using the in-memory token map.
 
 ---
 
