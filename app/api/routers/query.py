@@ -2,13 +2,14 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas.query import QueryRequest, QueryResponse, SourceChunk
+from app.core.auth import require_api_key
 from app.models.database import get_db
 from app.services.rag_pipeline import RAGPipeline
 
 router = APIRouter(prefix="/query", tags=["query"])
 
 
-@router.post("", response_model=QueryResponse)
+@router.post("", response_model=QueryResponse, dependencies=[Depends(require_api_key)])
 async def query_documents(
     request: QueryRequest,
     db: AsyncSession = Depends(get_db),

@@ -8,8 +8,7 @@ services:
       POSTGRES_DB: privrag
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    # DB port NOT exposed in production — only accessible within Docker network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U privrag -d privrag"]
       interval: 10s
@@ -32,7 +31,6 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - .:/app
       - chroma_data:/app/.chroma
 
 volumes:

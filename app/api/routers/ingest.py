@@ -5,6 +5,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas.ingest import IngestResponse
+from app.core.auth import require_api_key
+from app.core.config import settings
 from app.core.logging import get_logger
 from app.models.database import get_db
 from app.models.document import Document
@@ -19,7 +21,7 @@ router = APIRouter(prefix="/ingest", tags=["ingest"])
 ALLOWED_EXTENSIONS = {".pdf", ".txt"}
 
 
-@router.post("", response_model=IngestResponse)
+@router.post("", response_model=IngestResponse, dependencies=[Depends(require_api_key)])
 async def ingest_document(
     file: UploadFile,
     db: AsyncSession = Depends(get_db),
@@ -30,6 +32,12 @@ async def ingest_document(
         raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
 
     content = await file.read()
+    max_bytes = settings.max_upload_size_mb * 1024 * 1024
+    if len(content) > max_bytes:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File too large. Maximum size is {settings.max_upload_size_mb}MB.",
+        )
     content_hash = hashlib.sha256(content).hexdigest()
 
     # Dedup: skip re-ingestion of identical content

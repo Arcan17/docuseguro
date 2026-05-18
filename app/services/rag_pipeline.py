@@ -1,4 +1,7 @@
+import hashlib
 import time
+import uuid as uuid_module
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -82,6 +85,10 @@ class RAGPipeline:
         # Step 1: Strip PII from query before touching external services
         clean_query, token_map, pii_types = self._scrubber.scrub(query_text)
         pii_found = bool(token_map)
+
+        # Persist PII tokens to DB for cross-request restoration
+        if pii_found:
+            await self._persist_pii_tokens(session_id, token_map, pii_types)
 
         # Step 2: Embed (uses clean query — no PII sent to OpenAI embeddings)
         query_embedding = await embed_query(clean_query)
@@ -201,6 +208,42 @@ class RAGPipeline:
             compressed_tokens=compressed_tokens,
         )
 
+    async def _persist_pii_tokens(
+        self, session_id: str, token_map: dict[str, str], pii_types: list[str]
+    ) -> None:
+        from app.models.pii_token import PIIToken  # noqa: PLC0415
+
+        sid = self._parse_uuid(session_id)
+        expires_at = datetime.now(UTC) + timedelta(seconds=settings.pii_token_ttl_seconds)
+
+        # Infer pii_type per token from patterns
+        from app.services.privacy.patterns import EMAIL_RE, PHONE_CL_RE, RUT_RE  # noqa: PLC0415
+
+        for token, original in token_map.items():
+            if RUT_RE.fullmatch(original.strip()):
+                pii_type = "rut"
+            elif EMAIL_RE.fullmatch(original.strip()):
+                pii_type = "email"
+            elif PHONE_CL_RE.search(original.strip()):
+                pii_type = "phone"
+            else:
+                pii_type = "ner"
+
+            row = PIIToken(
+                session_id=sid,
+                token=token,
+                original_value=original,
+                pii_type=pii_type,
+                expires_at=expires_at,
+            )
+            self._db.add(row)
+
+        try:
+            await self._db.commit()
+        except Exception as e:
+            await self._db.rollback()
+            logger.warning("pii_token_persist_failed", error=str(e))
+
     async def _log_query(
         self,
         session_id: str,
@@ -214,17 +257,9 @@ class RAGPipeline:
         original_tokens: int | None = None,
         compressed_tokens: int | None = None,
     ) -> None:
-        import hashlib  # noqa: PLC0415
-
         from app.models.query_log import QueryLog  # noqa: PLC0415
 
-        try:
-            sid = UUID(session_id) if "-" in session_id else UUID(int=int(session_id, 16))
-        except (ValueError, AttributeError):
-            import uuid  # noqa: PLC0415
-
-            sid = uuid.uuid4()
-
+        sid = self._parse_uuid(session_id)
         log = QueryLog(
             session_id=sid,
             query_hash=hashlib.sha256(query_text.encode()).hexdigest(),
@@ -243,3 +278,10 @@ class RAGPipeline:
         except Exception as e:
             await self._db.rollback()
             logger.warning("query_log_failed", error=str(e))
+
+    @staticmethod
+    def _parse_uuid(session_id: str) -> UUID:
+        try:
+            return UUID(session_id) if "-" in session_id else UUID(int=int(session_id, 16))
+        except (ValueError, AttributeError):
+            return uuid_module.uuid4()

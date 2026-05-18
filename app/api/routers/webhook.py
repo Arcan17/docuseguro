@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import require_api_key
 from app.core.logging import get_logger
 from app.models.database import get_db
 from app.models.query_log import QueryLog
@@ -26,7 +27,7 @@ class CRMWebhookResponse(BaseModel):
     received_at: datetime
 
 
-@router.post("/crm", response_model=CRMWebhookResponse)
+@router.post("/crm", response_model=CRMWebhookResponse, dependencies=[Depends(require_api_key)])
 async def receive_crm_event(
     payload: CRMWebhookPayload,
     db: AsyncSession = Depends(get_db),

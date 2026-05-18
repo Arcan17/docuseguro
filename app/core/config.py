@@ -40,6 +40,14 @@ class Settings(BaseSettings):
     spacy_enabled: bool = False
     pii_token_ttl_seconds: int = 7200
 
+    # Auth
+    api_key: str = ""
+    max_upload_size_mb: int = 10
+
+    @property
+    def auth_enabled(self) -> bool:
+        return bool(self.api_key)
+
     @property
     def telegram_enabled(self) -> bool:
         return bool(self.telegram_bot_token and self.telegram_chat_id)
