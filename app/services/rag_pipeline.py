@@ -44,6 +44,7 @@ class QueryResult:
     def __init__(
         self,
         answer: str,
+        clean_query: str,
         session_id: str,
         cache_hit: bool,
         latency_ms: int,
@@ -55,6 +56,7 @@ class QueryResult:
         compressed_tokens: int | None,
     ) -> None:
         self.answer = answer
+        self.clean_query = clean_query  # PII-stripped version safe for logging/notifications
         self.session_id = session_id
         self.cache_hit = cache_hit
         self.latency_ms = latency_ms
@@ -112,6 +114,7 @@ class RAGPipeline:
             )
             return QueryResult(
                 answer=answer,
+                clean_query=clean_query,
                 session_id=session_id,
                 cache_hit=False,
                 latency_ms=latency,
@@ -146,6 +149,7 @@ class RAGPipeline:
             )
             return QueryResult(
                 answer=answer,
+                clean_query=clean_query,
                 session_id=session_id,
                 cache_hit=True,
                 latency_ms=latency,
@@ -197,6 +201,7 @@ class RAGPipeline:
 
         return QueryResult(
             answer=answer,
+            clean_query=clean_query,
             session_id=session_id,
             cache_hit=False,
             latency_ms=latency,

@@ -37,7 +37,13 @@ async def query_documents(
     from app.services.telegram_service import notify_query  # noqa: PLC0415
 
     asyncio.create_task(
-        notify_query(request.query, result.answer, result.latency_ms, result.cache_hit)
+        notify_query(
+            clean_query=result.clean_query,
+            latency_ms=result.latency_ms,
+            cache_hit=result.cache_hit,
+            pii_found=result.pii_found,
+            pii_types=result.pii_types,
+        )
     )
     asyncio.create_task(
         log_crm_event(

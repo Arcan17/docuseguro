@@ -76,5 +76,11 @@ async def test_telegram_not_called_when_disabled() -> None:
     from app.services.telegram_service import notify_query
 
     route = respx.post("https://api.telegram.org/").mock(return_value=httpx.Response(200))
-    await notify_query("¿Qué es la política?", "Son 15 días.", 300, False)
+    await notify_query(
+        clean_query="¿Qué es la política?",
+        latency_ms=300,
+        cache_hit=False,
+        pii_found=False,
+        pii_types=[],
+    )
     assert not route.called

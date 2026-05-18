@@ -138,7 +138,7 @@ curl -X POST http://localhost:8000/query \
   -d '{"query": "El empleado 12.345.678-9 con correo ana@empresa.cl cumplió?", "session_id": "abc-123"}'
 ```
 
-The RUT and email are replaced with UUID tokens **before** the embedding call and the LLM call. The response has the original values restored. The token mapping is persisted in PostgreSQL with a 2-hour TTL.
+The RUT and email are replaced with UUID tokens **before** the embedding call and the LLM call. The response has the original values restored within the same request using the in-memory token map. The token mapping is also persisted to PostgreSQL with a 2-hour TTL for audit purposes.
 
 ```json
 {

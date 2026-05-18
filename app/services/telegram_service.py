@@ -24,13 +24,18 @@ async def notify_ingest(filename: str, chunk_count: int) -> None:
     await _send(msg)
 
 
-async def notify_query(query: str, answer: str, latency_ms: int, cache_hit: bool) -> None:
-    status = "⚡ CACHE HIT" if cache_hit else "🤖 LLM"
-    preview = answer[:100] + "..." if len(answer) > 100 else answer
+async def notify_query(
+    clean_query: str,
+    latency_ms: int,
+    cache_hit: bool,
+    pii_found: bool,
+    pii_types: list[str],
+) -> None:
+    status = "CACHE HIT" if cache_hit else "LLM"
+    pii_note = f" [PII: {', '.join(pii_types)}]" if pii_found else ""
     msg = (
-        f"🔍 PrivRAG Query [{status}]\n"
-        f"Q: {query[:80]}\n"
-        f"A: {preview}\n"
+        f"PrivRAG Query [{status}]{pii_note}\n"
+        f"Q: {clean_query[:120]}\n"
         f"Latency: {latency_ms}ms"
     )
     await _send(msg)

@@ -20,9 +20,13 @@ async def log_crm_event(
         "chunk_count": chunk_count,
         "source": "privrag",
     }
+    headers: dict[str, str] = {}
+    if settings.auth_enabled:
+        headers["X-API-Key"] = settings.api_key
+
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
-            resp = await client.post(settings.crm_webhook_url, json=payload)
+            resp = await client.post(settings.crm_webhook_url, json=payload, headers=headers)
             resp.raise_for_status()
     except Exception as exc:
         logger.warning("crm_webhook_failed", error=str(exc))
