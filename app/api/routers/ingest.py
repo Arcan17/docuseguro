@@ -13,6 +13,7 @@ from app.models.document import Document
 from app.services.ingestion.chunker import semantic_chunk
 from app.services.ingestion.embedder import embed_chunks
 from app.services.ingestion.extractor import extract_text
+from app.services.privacy.scrubber import PIIScrubber
 from app.services.vector_store import upsert_chunks
 
 logger = get_logger(__name__)
@@ -61,9 +62,24 @@ async def ingest_document(
     await db.flush()  # get id without committing
     doc_id = str(doc.id)
 
+    pii_scrubbed = False
     try:
         text = extract_text(content, filename)
-        chunks = semantic_chunk(text, doc_id=doc_id)
+
+        # Scrub PII from document text before chunking/embedding
+        # so the vector store never holds raw identifiers
+        scrubber = PIIScrubber(spacy_enabled=settings.spacy_enabled)
+        clean_text, _token_map, pii_types = scrubber.scrub(text)
+        if _token_map:
+            pii_scrubbed = True
+            logger.info(
+                "ingest_pii_scrubbed",
+                filename=filename,
+                doc_id=doc_id,
+                pii_types=pii_types,
+            )
+
+        chunks = semantic_chunk(clean_text, doc_id=doc_id)
         embeddings = await embed_chunks(chunks)
         await upsert_chunks(doc_id, chunks, embeddings)
 
@@ -71,7 +87,13 @@ async def ingest_document(
         doc.status = "ready"
         await db.commit()
 
-        logger.info("ingest_complete", filename=filename, doc_id=doc.id, chunks=len(chunks))
+        logger.info(
+            "ingest_complete",
+            filename=filename,
+            doc_id=doc.id,
+            chunks=len(chunks),
+            pii_scrubbed=pii_scrubbed,
+        )
 
         # Fire Telegram notification async (non-blocking)
         import asyncio  # noqa: PLC0415
@@ -91,4 +113,5 @@ async def ingest_document(
         filename=filename,
         chunk_count=len(chunks),
         status="ready",
+        pii_scrubbed=pii_scrubbed,
     )
