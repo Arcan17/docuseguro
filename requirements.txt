@@ -12,7 +12,10 @@ chromadb==0.5.20
 
 # LLM providers
 anthropic==0.40.0
-openai==1.57.0
+openai==1.57.0  # also used as Groq SDK (OpenAI-compatible)
+
+# Embeddings (local ONNX — no API key required)
+fastembed==0.4.2
 
 # Document parsing
 pypdf==5.1.0

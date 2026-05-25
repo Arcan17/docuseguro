@@ -25,6 +25,10 @@ def _get_llm() -> LLMProvider:
         from app.services.llm.anthropic_client import AnthropicClient  # noqa: PLC0415
 
         return AnthropicClient()
+    if settings.llm_provider == "groq":
+        from app.services.llm.groq_client import GroqClient  # noqa: PLC0415
+
+        return GroqClient()
     from app.services.llm.openai_client import OpenAIClient  # noqa: PLC0415
 
     return OpenAIClient()

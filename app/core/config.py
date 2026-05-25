@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     # App
     app_name: str = "PrivRAG"
     log_level: str = "INFO"
-    llm_provider: Literal["anthropic", "openai"] = "anthropic"
+    llm_provider: Literal["anthropic", "openai", "groq"] = "groq"
 
     # Database
     database_url: str = "postgresql+asyncpg://privrag:privrag@localhost:5432/privrag"
@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     # LLM
     anthropic_api_key: str = ""
     openai_api_key: str = ""
+    groq_api_key: str = ""
 
     # Telegram
     telegram_bot_token: str = ""

@@ -5,11 +5,13 @@ MAX_CONTEXT_TOKENS = 1500
 CACHE_TTL_SECONDS = 3600
 PII_TOKEN_TTL_SECONDS = 7200
 
-EMBEDDING_MODEL = "text-embedding-3-small"
+EMBEDDING_MODEL = "text-embedding-3-small"  # kept for reference (not used in demo)
+EMBEDDING_MODEL_LOCAL = "BAAI/bge-small-en-v1.5"  # fastembed local model, 384-dim, ~24MB
 EMBEDDING_BATCH_SIZE = 100
 
 ANTHROPIC_MODEL = "claude-haiku-3-5-20241022"
 OPENAI_MODEL = "gpt-4o-mini"
+GROQ_MODEL = "llama-3.1-8b-instant"
 
 SYSTEM_PROMPT = (
     "You are a helpful assistant that answers questions based strictly on the provided context. "
