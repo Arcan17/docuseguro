@@ -43,7 +43,7 @@ PrivRAG is a privacy-preserving Retrieval-Augmented Generation (RAG) pipeline fo
 
 - `extractor.py` handles PDF (via pypdf) and plain text
 - `chunker.py` uses recursive character splitting with `chunk_size=800, overlap=150`
-- Chunks are embedded with OpenAI `text-embedding-3-small` in batches of 100
+- Chunks are embedded with **fastembed** (`BAAI/bge-small-en-v1.5`, 384-dim local ONNX) — no external API call, no data leaves the server
 - ChromaDB stores vectors with `hnsw:space=cosine` metric
 - Retrieval filters out chunks where `cosine_similarity < 0.75` (distance > 0.25)
 - When 0 chunks pass the threshold → returns graceful "no context found" without calling LLM
