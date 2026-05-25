@@ -11,6 +11,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 async def seed_if_empty() -> None:
+    from sqlalchemy import func, select
+
     from app.models.database import AsyncSessionLocal, create_tables
     from app.models.document import Document
     from app.services.ingestion.chunker import semantic_chunk
@@ -18,7 +20,6 @@ async def seed_if_empty() -> None:
     from app.services.ingestion.extractor import extract_text
     from app.services.privacy.scrubber import PIIScrubber
     from app.services.vector_store import upsert_chunks
-    from sqlalchemy import func, select
 
     await create_tables()
 
