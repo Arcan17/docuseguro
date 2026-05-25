@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 430" width="740">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 450" width="740">
 
   <!-- === BACKGROUND === -->
   <rect width="740" height="430" rx="10" fill="#0d1117"/>
@@ -217,25 +217,31 @@
   <!-- ── GROUP 9: footer / capabilities summary ── appear at t=13.5s -->
   <g opacity="0">
     <line x1="22" y1="346" x2="718" y2="346" stroke="#30363d" stroke-width="1"/>
-    <text x="22" y="366"
+    <text x="22" y="364"
           font-family="'SFMono-Regular',Consolas,monospace" font-size="12">
-      <tspan fill="#6e7681">  4 capabilities: </tspan>
+      <tspan fill="#6e7681">  </tspan>
       <tspan fill="#79c0ff">RAG</tspan>
-      <tspan fill="#6e7681"> (cosine ≥ 0.75)  ·  </tspan>
+      <tspan fill="#6e7681"> cosine ≥ 0.75  ·  </tspan>
       <tspan fill="#56d364">CACHE</tspan>
-      <tspan fill="#6e7681"> (SHA256, 30-45% hit rate)  ·  </tspan>
+      <tspan fill="#6e7681"> SHA256 30-45% hit  ·  </tspan>
       <tspan fill="#ff7b72">PII</tspan>
-      <tspan fill="#6e7681"> (100% detection)  ·  </tspan>
+      <tspan fill="#6e7681"> 100% detection  ·  </tspan>
       <tspan fill="#e3b341">COMPRESS</tspan>
-      <tspan fill="#6e7681"> (~15% tokens)</tspan>
+      <tspan fill="#6e7681"> ~15% tokens saved</tspan>
     </text>
-    <text x="22" y="386"
+    <text x="22" y="384"
           font-family="'SFMono-Regular',Consolas,monospace" font-size="12" fill="#6e7681">
       <tspan>  </tspan>
       <tspan fill="#3fb950">▸</tspan>
+      <tspan fill="#6e7681">  </tspan>
+      <tspan fill="#79c0ff">privrag-production.up.railway.app/docs</tspan>
+      <tspan fill="#6e7681">  ·  FastAPI · ChromaDB · fastembed · PostgreSQL</tspan>
+    </text>
+    <text x="22" y="402"
+          font-family="'SFMono-Regular',Consolas,monospace" font-size="12" fill="#6e7681">
       <tspan>  </tspan>
-      <tspan fill="#79c0ff" text-decoration="underline">privrag-production.up.railway.app/docs</tspan>
-      <tspan fill="#6e7681">  ·  FastAPI · ChromaDB · fastembed · PostgreSQL · Docker</tspan>
+      <tspan fill="#3fb950">▸</tspan>
+      <tspan fill="#6e7681">  44 automated tests  ·  Docker + CI/CD  ·  Railway deploy  ·  X-API-Key auth</tspan>
     </text>
     <animate attributeName="opacity"
       values="0;0;1;1;0;0"
