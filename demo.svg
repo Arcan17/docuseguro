@@ -1,0 +1,254 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 430" width="740">
+
+  <!-- === BACKGROUND === -->
+  <rect width="740" height="430" rx="10" fill="#0d1117"/>
+
+  <!-- === TITLE BAR === -->
+  <rect width="740" height="38" rx="10" fill="#161b22"/>
+  <rect y="20" width="740" height="18" fill="#161b22"/>
+  <circle cx="22" cy="19" r="6" fill="#ff5f57"/>
+  <circle cx="44" cy="19" r="6" fill="#febc2e"/>
+  <circle cx="66" cy="19" r="6" fill="#28c840"/>
+  <text x="370" y="24" text-anchor="middle"
+        font-family="'SFMono-Regular',Consolas,monospace" font-size="12" fill="#6e7681">
+    privrag · privacy-preserving RAG API · live on Railway
+  </text>
+
+  <!-- === CONTENT === -->
+  <!-- monospace font, 13px, line-height 20px, x=22, first y=66 -->
+
+  <!-- ── GROUP 1: ingest command ── appear at t=0.5s -->
+  <g opacity="0">
+    <text x="22" y="66"
+          font-family="'SFMono-Regular',Consolas,monospace" font-size="13">
+      <tspan fill="#3fb950">$</tspan>
+      <tspan fill="#e3b341">  curl -X POST /ingest</tspan>
+      <tspan fill="#6e7681">  -F "file=@hr_demo.txt"</tspan>
+    </text>
+    <animate attributeName="opacity"
+      values="0;0;1;1;0;0"
+      keyTimes="0;0.025;0.05;0.875;0.9;1"
+      dur="20s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- ── GROUP 2: ingest response ── appear at t=1.5s -->
+  <g opacity="0">
+    <text x="22" y="88"
+          font-family="'SFMono-Regular',Consolas,monospace" font-size="13">
+      <tspan fill="#6e7681">  { </tspan>
+      <tspan fill="#79c0ff">"status"</tspan>
+      <tspan fill="#6e7681">: </tspan>
+      <tspan fill="#a5f3a5">"ready"</tspan>
+      <tspan fill="#6e7681">, </tspan>
+      <tspan fill="#79c0ff">"chunk_count"</tspan>
+      <tspan fill="#6e7681">: </tspan>
+      <tspan fill="#a5f3a5">1</tspan>
+      <tspan fill="#6e7681">,</tspan>
+      <tspan fill="#ff7b72">  "pii_scrubbed"</tspan>
+      <tspan fill="#6e7681">: </tspan>
+      <tspan fill="#3fb950">true  }</tspan>
+    </text>
+    <text x="22" y="106"
+          font-family="'SFMono-Regular',Consolas,monospace" font-size="12" fill="#6e7681">
+      <tspan>  ↳ RUT + email stripped at ingest — never stored in vectors</tspan>
+    </text>
+    <animate attributeName="opacity"
+      values="0;0;1;1;0;0"
+      keyTimes="0;0.075;0.1;0.875;0.9;1"
+      dur="20s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- separator line -->
+  <line x1="22" y1="120" x2="718" y2="120" stroke="#21262d" stroke-width="1" opacity="0">
+    <animate attributeName="opacity"
+      values="0;0;0.8;0.8;0;0"
+      keyTimes="0;0.17;0.19;0.875;0.9;1"
+      dur="20s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- ── GROUP 3: query 1 command ── appear at t=3.5s -->
+  <g opacity="0">
+    <text x="22" y="138"
+          font-family="'SFMono-Regular',Consolas,monospace" font-size="13">
+      <tspan fill="#3fb950">$</tspan>
+      <tspan fill="#e3b341">  curl -X POST /query</tspan>
+      <tspan fill="#6e7681">  -d '{"query": "¿Días de vacaciones?"}'</tspan>
+    </text>
+    <animate attributeName="opacity"
+      values="0;0;1;1;0;0"
+      keyTimes="0;0.175;0.2;0.875;0.9;1"
+      dur="20s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- ── GROUP 4: query 1 response ── appear at t=4.5s -->
+  <g opacity="0">
+    <text x="22" y="160"
+          font-family="'SFMono-Regular',Consolas,monospace" font-size="13">
+      <tspan fill="#6e7681">  { </tspan>
+      <tspan fill="#79c0ff">"answer"</tspan>
+      <tspan fill="#6e7681">: </tspan>
+      <tspan fill="#a5f3a5">"15 días hábiles de vacaciones anuales"</tspan>
+      <tspan fill="#6e7681">,</tspan>
+    </text>
+    <text x="22" y="178"
+          font-family="'SFMono-Regular',Consolas,monospace" font-size="13">
+      <tspan fill="#6e7681">    </tspan>
+      <tspan fill="#79c0ff">"latency_ms"</tspan>
+      <tspan fill="#6e7681">: </tspan>
+      <tspan fill="#a5f3a5">776</tspan>
+      <tspan fill="#6e7681">, </tspan>
+      <tspan fill="#79c0ff">"cache_hit"</tspan>
+      <tspan fill="#6e7681">: </tspan>
+      <tspan fill="#f0883e">false</tspan>
+      <tspan fill="#6e7681">, </tspan>
+      <tspan fill="#79c0ff">"provider"</tspan>
+      <tspan fill="#6e7681">: </tspan>
+      <tspan fill="#a5f3a5">"groq"  }</tspan>
+    </text>
+    <animate attributeName="opacity"
+      values="0;0;1;1;0;0"
+      keyTimes="0;0.225;0.25;0.875;0.9;1"
+      dur="20s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- separator -->
+  <line x1="22" y1="194" x2="718" y2="194" stroke="#21262d" stroke-width="1" opacity="0">
+    <animate attributeName="opacity"
+      values="0;0;0.8;0.8;0;0"
+      keyTimes="0;0.305;0.325;0.875;0.9;1"
+      dur="20s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- ── GROUP 5: query 2 command (PII) ── appear at t=6.5s -->
+  <g opacity="0">
+    <text x="22" y="212"
+          font-family="'SFMono-Regular',Consolas,monospace" font-size="13">
+      <tspan fill="#3fb950">$</tspan>
+      <tspan fill="#e3b341">  curl -X POST /query</tspan>
+      <tspan fill="#6e7681">  -d '{"query": "...RUT </tspan>
+      <tspan fill="#ff7b72">12.345.678-9</tspan>
+      <tspan fill="#6e7681">..."}'</tspan>
+    </text>
+    <animate attributeName="opacity"
+      values="0;0;1;1;0;0"
+      keyTimes="0;0.325;0.35;0.875;0.9;1"
+      dur="20s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- ── GROUP 6: query 2 response (PII) ── appear at t=7.5s -->
+  <g opacity="0">
+    <text x="22" y="234"
+          font-family="'SFMono-Regular',Consolas,monospace" font-size="13">
+      <tspan fill="#6e7681">  { </tspan>
+      <tspan fill="#ff7b72">"pii_found"</tspan>
+      <tspan fill="#6e7681">: </tspan>
+      <tspan fill="#3fb950">true</tspan>
+      <tspan fill="#6e7681">, </tspan>
+      <tspan fill="#ff7b72">"pii_types"</tspan>
+      <tspan fill="#6e7681">: </tspan>
+      <tspan fill="#a5f3a5">["rut"]</tspan>
+      <tspan fill="#6e7681">, </tspan>
+      <tspan fill="#79c0ff">"latency_ms"</tspan>
+      <tspan fill="#6e7681">: </tspan>
+      <tspan fill="#a5f3a5">2081</tspan>
+      <tspan fill="#6e7681">  }</tspan>
+    </text>
+    <text x="22" y="252"
+          font-family="'SFMono-Regular',Consolas,monospace" font-size="12" fill="#6e7681">
+      <tspan>  ↳ RUT replaced with UUID before embedding + LLM call — raw PII never leaves server</tspan>
+    </text>
+    <animate attributeName="opacity"
+      values="0;0;1;1;0;0"
+      keyTimes="0;0.375;0.4;0.875;0.9;1"
+      dur="20s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- separator -->
+  <line x1="22" y1="268" x2="718" y2="268" stroke="#21262d" stroke-width="1" opacity="0">
+    <animate attributeName="opacity"
+      values="0;0;0.8;0.8;0;0"
+      keyTimes="0;0.48;0.5;0.875;0.9;1"
+      dur="20s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- ── GROUP 7: query 3 command (cache hit) ── appear at t=10s -->
+  <g opacity="0">
+    <text x="22" y="286"
+          font-family="'SFMono-Regular',Consolas,monospace" font-size="13">
+      <tspan fill="#3fb950">$</tspan>
+      <tspan fill="#e3b341">  curl -X POST /query</tspan>
+      <tspan fill="#6e7681">  -d '{"query": "¿Días de vacaciones?"}'</tspan>
+      <tspan fill="#56d364">  # same query</tspan>
+    </text>
+    <animate attributeName="opacity"
+      values="0;0;1;1;0;0"
+      keyTimes="0;0.5;0.525;0.875;0.9;1"
+      dur="20s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- ── GROUP 8: query 3 response (cache hit) ── appear at t=11s -->
+  <g opacity="0">
+    <text x="22" y="308"
+          font-family="'SFMono-Regular',Consolas,monospace" font-size="13">
+      <tspan fill="#6e7681">  { </tspan>
+      <tspan fill="#56d364">"cache_hit"</tspan>
+      <tspan fill="#6e7681">: </tspan>
+      <tspan fill="#3fb950">true</tspan>
+      <tspan fill="#6e7681">, </tspan>
+      <tspan fill="#79c0ff">"provider"</tspan>
+      <tspan fill="#6e7681">: </tspan>
+      <tspan fill="#56d364">"cache"</tspan>
+      <tspan fill="#6e7681">, </tspan>
+      <tspan fill="#79c0ff">"latency_ms"</tspan>
+      <tspan fill="#6e7681">: </tspan>
+      <tspan fill="#a5f3a5">1089</tspan>
+      <tspan fill="#6e7681">  }</tspan>
+    </text>
+    <text x="22" y="326"
+          font-family="'SFMono-Regular',Consolas,monospace" font-size="12" fill="#6e7681">
+      <tspan>  ↳ SHA256(query+context) cache hit — no LLM call, no tokens consumed</tspan>
+    </text>
+    <animate attributeName="opacity"
+      values="0;0;1;1;0;0"
+      keyTimes="0;0.55;0.575;0.875;0.9;1"
+      dur="20s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- ── GROUP 9: footer / capabilities summary ── appear at t=13.5s -->
+  <g opacity="0">
+    <line x1="22" y1="346" x2="718" y2="346" stroke="#30363d" stroke-width="1"/>
+    <text x="22" y="366"
+          font-family="'SFMono-Regular',Consolas,monospace" font-size="12">
+      <tspan fill="#6e7681">  4 capabilities: </tspan>
+      <tspan fill="#79c0ff">RAG</tspan>
+      <tspan fill="#6e7681"> (cosine ≥ 0.75)  ·  </tspan>
+      <tspan fill="#56d364">CACHE</tspan>
+      <tspan fill="#6e7681"> (SHA256, 30-45% hit rate)  ·  </tspan>
+      <tspan fill="#ff7b72">PII</tspan>
+      <tspan fill="#6e7681"> (100% detection)  ·  </tspan>
+      <tspan fill="#e3b341">COMPRESS</tspan>
+      <tspan fill="#6e7681"> (~15% tokens)</tspan>
+    </text>
+    <text x="22" y="386"
+          font-family="'SFMono-Regular',Consolas,monospace" font-size="12" fill="#6e7681">
+      <tspan>  </tspan>
+      <tspan fill="#3fb950">▸</tspan>
+      <tspan>  </tspan>
+      <tspan fill="#79c0ff" text-decoration="underline">privrag-production.up.railway.app/docs</tspan>
+      <tspan fill="#6e7681">  ·  FastAPI · ChromaDB · fastembed · PostgreSQL · Docker</tspan>
+    </text>
+    <animate attributeName="opacity"
+      values="0;0;1;1;0;0"
+      keyTimes="0;0.675;0.7;0.875;0.9;1"
+      dur="20s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- ── FADE-OUT OVERLAY (covers content between t=17.5s and t=18.5s) ── -->
+  <rect x="0" y="38" width="740" height="392" fill="#0d1117" opacity="0">
+    <animate attributeName="opacity"
+      values="0;0;0;1;1;0"
+      keyTimes="0;0.875;0.875;0.92;0.98;1"
+      dur="20s" repeatCount="indefinite"/>
+  </rect>
+
+</svg>
