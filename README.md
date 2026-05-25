@@ -197,7 +197,7 @@ All endpoints except `/health` and `/metrics` require the `X-API-Key` header whe
 ```bash
 pip install -r requirements.txt aiosqlite
 pytest -v --tb=short
-# 44 passed
+# 61 passed
 ```
 
 ---
@@ -226,4 +226,4 @@ pytest -v --tb=short
 - **fastembed** — local ONNX embeddings (BAAI/bge-small-en-v1.5, 384-dim, no API key)
 - **Groq / Anthropic / OpenAI** — LLM generation (configurable provider)
 - **Docker Compose** — production + dev override configs
-- **GitHub Actions** — CI with 44 automated tests, zero LLM calls in pipeline
+- **GitHub Actions** — CI with 61 automated tests, zero LLM calls in pipeline
