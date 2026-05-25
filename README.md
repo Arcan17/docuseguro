@@ -2,7 +2,7 @@
 
 > Privacy-preserving RAG pipeline for enterprise documents
 
-**🚀 [Live Demo](https://privrag-production.up.railway.app/docs)** · [API Docs](https://privrag-production.up.railway.app/docs) · [Health](https://privrag-production.up.railway.app/health)
+**🚀 [Live API Demo](https://privrag-production.up.railway.app/docs)** · [Health check](https://privrag-production.up.railway.app/health)
 
 [![CI](https://github.com/Arcan17/privrag/actions/workflows/ci.yml/badge.svg)](https://github.com/Arcan17/privrag/actions/workflows/ci.yml)
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
@@ -22,14 +22,93 @@ Built to demonstrate four enterprise AI engineering capabilities:
 
 ---
 
+## Try it live
+
+The API is deployed on Railway with demo documents pre-loaded. No API key required for the public demo.
+
+**Base URL:** `https://privrag-production.up.railway.app`
+
+### 1. Health check
+```bash
+curl https://privrag-production.up.railway.app/health
+```
+```json
+{"status": "ok", "provider": "groq"}
+```
+
+### 2. Query (no PII)
+```bash
+curl -X POST https://privrag-production.up.railway.app/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "¿Cuántos días de vacaciones tienen los empleados?", "session_id": "demo-001"}'
+```
+```json
+{
+  "answer": "Los empleados con contrato indefinido tienen 15 días hábiles de vacaciones al año...",
+  "cache_hit": false,
+  "latency_ms": 843,
+  "pii_found": false,
+  "tokens_saved_pct": 14.2,
+  "chunk_count": 3
+}
+```
+
+### 3. Query with PII — automatically masked before hitting the LLM
+```bash
+curl -X POST https://privrag-production.up.railway.app/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "¿Cumplió el empleado con RUT 12.345.678-9 y correo ana@empresa.cl sus metas?", "session_id": "demo-002"}'
+```
+```json
+{
+  "answer": "El empleado 12.345.678-9 cumplió con los requisitos de su contrato...",
+  "cache_hit": false,
+  "pii_found": true,
+  "pii_types": ["rut", "email"]
+}
+```
+> The RUT and email are replaced with UUID tokens **before** the embedding call and the LLM call. The LLM never sees `12.345.678-9` or `ana@empresa.cl`. Values are restored in the response using the in-memory token map.
+
+### 4. Same query again — served from cache
+```bash
+curl -X POST https://privrag-production.up.railway.app/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "¿Cuántos días de vacaciones tienen los empleados?", "session_id": "demo-003"}'
+```
+```json
+{
+  "answer": "Los empleados con contrato indefinido tienen 15 días hábiles...",
+  "cache_hit": true,
+  "latency_ms": 18
+}
+```
+> SHA256 cache hit: response in ~18ms instead of ~800ms.
+
+### 5. Metrics
+```bash
+curl https://privrag-production.up.railway.app/metrics
+```
+```json
+{
+  "queries_total": 10,
+  "cache_hit_rate_pct": 30.0,
+  "avg_latency_ms": 612.4,
+  "p95_latency_ms": 1050.0,
+  "pii_detected_count": 2,
+  "tokens_saved_avg_pct": 15.1
+}
+```
+
+---
+
 ## Business use cases
 
-This system is especially relevant for Chilean companies or any business that handles regulated data:
+Especially relevant for companies handling regulated data:
 
-- **Legal & compliance**: Query contracts and regulatory documents without exposing client RUTs to third-party APIs
-- **HR portals**: Let employees ask about vacation policies, payroll, and benefits — PII-safe
-- **Healthcare**: Search clinical guidelines or internal protocols without sending patient data externally
-- **Insurance**: Query internal policy documents with automatic masking of policyholder identifiers
+- **Legal & compliance**: Query contracts without exposing client RUTs to third-party APIs
+- **HR portals**: Let employees ask about policies, payroll, benefits — PII-safe
+- **Healthcare**: Search clinical guidelines without sending patient data externally
+- **Insurance**: Query policy documents with automatic masking of policyholder identifiers
 - **Tech support**: Internal FAQ bot that strips ticket reporter contacts before hitting the LLM
 
 ---
@@ -39,20 +118,20 @@ This system is especially relevant for Chilean companies or any business that ha
 ```
 POST /ingest (PDF / .txt)
      ├─ [1] Extract text  →  pypdf or utf-8 decode
-     ├─ [2] PII Scrubber  →  RUT / email / phone replaced with [uuid] (document PII is NOT restorable — by design)
-     ├─ [3] Chunking      →  Custom recursive splitter (\n\n → \n → ". " → " " → hard split, 800 chars, 150 overlap)
-     ├─ [4] Embedding     →  OpenAI text-embedding-3-small  (clean chunks, no raw PII)
+     ├─ [2] PII Scrubber  →  RUT / email / phone replaced with [uuid] (NOT restorable — by design)
+     ├─ [3] Chunking      →  Custom recursive splitter (800 chars, 150 overlap)
+     ├─ [4] Embedding     →  fastembed BAAI/bge-small-en-v1.5 (local ONNX, no API key)
      └─ [5] Vector store  →  ChromaDB persistent (hnsw:space=cosine)
 
 POST /query {"query": "¿Cumplió el empleado 12.345.678-9?", "session_id": "..."}
-     ├─ [1] PII Scrubber  →  "12.345.678-9" replaced with [uuid]  (token map kept in memory for this request)
-     ├─ [2] Embedding     →  OpenAI text-embedding-3-small  (clean query, no PII)
+     ├─ [1] PII Scrubber  →  "12.345.678-9" → [uuid]  (in-memory token map)
+     ├─ [2] Embedding     →  fastembed local ONNX  (clean query, no PII)
      ├─ [3] Vector search →  ChromaDB cosine ≥ 0.75  (low-quality chunks rejected)
-     ├─ [4] Cache lookup  →  SHA256(query + context) → PostgreSQL  (HIT: return <20ms)
+     ├─ [4] Cache lookup  →  SHA256(query + context) → PostgreSQL  (HIT: ~18ms)
      ├─ [5] Compression   →  sentence dedup + tiktoken trim  (MISS path only)
-     ├─ [6] LLM call      →  Anthropic Haiku or GPT-4o-mini  (never sees raw PII)
-     ├─ [7] PII restore   →  [uuid] → "12.345.678-9" in response  (in-memory, same request only)
-     └─ [8] Async tasks   →  Telegram (PII-free summary only) + CRM webhook (non-blocking)
+     ├─ [6] LLM call      →  Groq / Anthropic / OpenAI  (never sees raw PII)
+     ├─ [7] PII restore   →  [uuid] → "12.345.678-9" in response
+     └─ [8] Async tasks   →  Telegram (PII-free summary) + CRM webhook (non-blocking)
 ```
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for full diagrams and design decisions.
@@ -61,130 +140,53 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for full diagrams and design decisions.
 
 | Boundary | What the external service receives |
 |----------|------------------------------------|
-| OpenAI Embeddings — ingest | Scrubbed document chunks — RUT/email/phone replaced by `[uuid]` before chunking |
-| OpenAI Embeddings — query | Scrubbed query text — same replacement before embedding call |
-| Anthropic / OpenAI LLM | Compressed scrubbed-document context + scrubbed query — no raw PII |
-| PostgreSQL `pii_tokens` | UUID ↔ original value mapping, TTL 2h, for audit only |
-| Telegram notification | PII-type summary (`[PII: rut, email]`) + anonymized query — never the original value or the full LLM response |
-| CRM webhook | Query hash, latency, cache status — no query text at all |
-
-**Design note:** Document PII is intentionally not restorable from vector storage — the scrubbed text is what gets indexed and what the LLM reads. Query PII is restored only within the same request/response cycle using the in-memory token map.
+| Embeddings (local) | Clean text — no API call, no data leaves the server |
+| LLM (Groq/Anthropic/OpenAI) | Scrubbed context + scrubbed query — no raw PII |
+| PostgreSQL `pii_tokens` | UUID ↔ original value, TTL 2h, audit only |
+| Telegram notification | PII-type summary only — never the original value |
+| CRM webhook | Query hash, latency, cache status — no query text |
 
 ---
 
-## Quick start
+## Quick start (local)
 
 ```bash
 git clone https://github.com/Arcan17/privrag.git && cd privrag
 cp .env.example .env
 ```
 
-Edit `.env` and set at minimum:
+Edit `.env`:
 ```bash
-OPENAI_API_KEY=sk-...        # Required for embeddings (always)
-ANTHROPIC_API_KEY=sk-ant-... # Required if LLM_PROVIDER=anthropic
-API_KEY=your-secret-key      # Leave empty to disable auth in local dev
+GROQ_API_KEY=gsk_...     # Free at console.groq.com — no credit card required
+API_KEY=your-secret-key  # Leave empty to disable auth in local dev
 ```
 
-> **Note:** OpenAI is always required for embeddings (`text-embedding-3-small`), even when using Claude as the LLM. Set `LLM_PROVIDER=openai` to use only one API key.
-
 ```bash
-# Production (no hot-reload, DB not exposed externally)
+# Production
 docker compose up -d
 
-# Development (hot-reload enabled, DB on localhost:5432)
+# Development (hot-reload, DB on localhost:5432)
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
 
-Check it's running:
 ```bash
 curl http://localhost:8000/health
-# {"status":"ok","provider":"anthropic"}
+# {"status":"ok","provider":"groq"}
 ```
 
 ---
 
 ## API reference
 
-All endpoints except `/health` require the `X-API-Key` header when `API_KEY` is set in `.env`.
+All endpoints except `/health` and `/metrics` require the `X-API-Key` header when `API_KEY` is set.
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `GET` | `/health` | No | Health check |
-| `POST` | `/ingest` | Yes | Upload PDF or .txt (max 10MB) |
-| `POST` | `/query` | Yes | Query documents with RAG |
-| `GET` | `/metrics` | Yes | Performance metrics (last N hours) |
-| `POST` | `/webhook/crm` | Yes | Simulated CRM event receiver |
-
-### Ingest a document
-
-```bash
-curl -X POST http://localhost:8000/ingest \
-  -H "X-API-Key: your-secret-key" \
-  -F "file=@data/sample_docs/sample_policy.txt"
-```
-
-```json
-{"doc_id": 1, "filename": "sample_policy.txt", "chunk_count": 8, "status": "ready"}
-```
-
-### Query (no PII)
-
-```bash
-curl -X POST http://localhost:8000/query \
-  -H "X-API-Key: your-secret-key" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "¿Cuántos días de vacaciones hay?", "session_id": "abc-123"}'
-```
-
-```json
-{
-  "answer": "Los empleados con contrato indefinido tienen 15 días hábiles...",
-  "cache_hit": false,
-  "latency_ms": 1203,
-  "pii_found": false,
-  "llm_provider": "anthropic",
-  "tokens_saved_pct": 12.3,
-  "chunk_count": 3,
-  "source_chunks": [...]
-}
-```
-
-### Query with PII — automatically masked
-
-```bash
-curl -X POST http://localhost:8000/query \
-  -H "X-API-Key: your-secret-key" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "El empleado 12.345.678-9 con correo ana@empresa.cl cumplió?", "session_id": "abc-123"}'
-```
-
-The RUT and email are replaced with UUID tokens **before** the embedding call and the LLM call. The response has the original values restored within the same request using the in-memory token map. The token mapping is also persisted to PostgreSQL with a 2-hour TTL for audit purposes.
-
-```json
-{
-  "answer": "El empleado 12.345.678-9 cumplió con los requisitos...",
-  "pii_found": true,
-  "pii_types": ["rut", "email"]
-}
-```
-
-### Metrics
-
-```bash
-curl -H "X-API-Key: your-secret-key" "http://localhost:8000/metrics?hours=24"
-```
-
-```json
-{
-  "queries_total": 50,
-  "cache_hit_rate_pct": 44.0,
-  "avg_latency_ms": 438.2,
-  "p95_latency_ms": 1102.0,
-  "pii_detected_count": 8,
-  "tokens_saved_avg_pct": 17.3
-}
-```
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Health check + provider info |
+| `POST` | `/ingest` | Upload PDF or .txt (max 10MB) |
+| `POST` | `/query` | Natural language query with RAG + PII stripping |
+| `GET` | `/metrics` | Cache hit rate, latency p95, PII count |
+| `POST` | `/webhook/crm` | Simulated CRM event receiver |
 
 ---
 
@@ -202,27 +204,24 @@ pytest -v --tb=short
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LLM_PROVIDER` | `anthropic` | `anthropic` or `openai` |
-| `OPENAI_API_KEY` | — | **Always required** for embeddings |
+| `LLM_PROVIDER` | `groq` | `groq`, `anthropic`, or `openai` |
+| `GROQ_API_KEY` | — | Free at [console.groq.com](https://console.groq.com) |
 | `ANTHROPIC_API_KEY` | — | Required when `LLM_PROVIDER=anthropic` |
-| `API_KEY` | *(empty)* | Auth key for all endpoints. Leave empty to disable in local dev |
-| `MAX_UPLOAD_SIZE_MB` | `10` | Maximum file size for `/ingest` |
+| `OPENAI_API_KEY` | — | Required when `LLM_PROVIDER=openai` |
+| `API_KEY` | *(empty)* | Auth key. Leave empty to disable in local dev |
 | `COSINE_SIMILARITY_THRESHOLD` | `0.75` | Min similarity to include a chunk |
 | `CHUNK_SIZE` | `800` | Max chars per chunk |
-| `CHUNK_OVERLAP` | `150` | Overlap between consecutive chunks |
-| `MAX_CONTEXT_TOKENS` | `1500` | Max tokens sent to LLM (compressed to 85%) |
 | `CACHE_TTL_SECONDS` | `3600` | Response cache TTL |
-| `TELEGRAM_BOT_TOKEN` | *(empty)* | Leave empty to disable Telegram |
-| `SPACY_ENABLED` | `false` | Enable spaCy NER for person/org PII detection |
+| `SPACY_ENABLED` | `false` | Enable spaCy NER for person/org detection |
 
 ---
 
 ## Stack
 
-- **Python 3.11** — FastAPI, SQLAlchemy async, Pydantic v2
+- **Python 3.11** — FastAPI, SQLAlchemy 2.0 async, Pydantic v2
 - **PostgreSQL 16** — query cache, audit log, PII token store (TTL-governed)
-- **ChromaDB 0.5** — vector store (cosine similarity, persistent volume, no LangChain)
-- **OpenAI** — `text-embedding-3-small` embeddings
-- **Anthropic / OpenAI** — Claude Haiku or GPT-4o-mini (configurable)
-- **structlog** — structured JSON logging
+- **ChromaDB 0.5** — vector store (cosine similarity, persistent volume)
+- **fastembed** — local ONNX embeddings (BAAI/bge-small-en-v1.5, 384-dim, no API key)
+- **Groq / Anthropic / OpenAI** — LLM generation (configurable provider)
 - **Docker Compose** — production + dev override configs
+- **GitHub Actions** — CI with 44 automated tests, zero LLM calls in pipeline
