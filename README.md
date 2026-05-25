@@ -2,6 +2,8 @@
 
 > Privacy-preserving RAG pipeline for enterprise documents
 
+**🚀 [Live Demo](https://privrag-production.up.railway.app/docs)** · [API Docs](https://privrag-production.up.railway.app/docs) · [Health](https://privrag-production.up.railway.app/health)
+
 [![CI](https://github.com/Arcan17/privrag/actions/workflows/ci.yml/badge.svg)](https://github.com/Arcan17/privrag/actions/workflows/ci.yml)
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688.svg)](https://fastapi.tiangolo.com)
