@@ -1,0 +1,69 @@
+[
+  {
+    "id": "vac-001",
+    "question": "¿Cuántos días de vacaciones tienen los empleados con contrato indefinido?",
+    "expected_keywords": ["15", "días", "hábiles", "indefinido"],
+    "pii_in_query": false,
+    "should_have_context": true,
+    "notes": "Core vacation policy question — should retrieve chunk 4_0"
+  },
+  {
+    "id": "vac-002",
+    "question": "¿Desde cuándo puede un empleado tomar vacaciones?",
+    "expected_keywords": ["año", "antigüedad"],
+    "pii_in_query": false,
+    "should_have_context": true,
+    "notes": "Eligibility timing question"
+  },
+  {
+    "id": "vac-003",
+    "question": "¿Cómo se solicitan las vacaciones?",
+    "expected_keywords": ["formulario", "RH-003", "anticipación"],
+    "pii_in_query": false,
+    "should_have_context": true,
+    "notes": "Process question — form RH-003"
+  },
+  {
+    "id": "pii-001",
+    "question": "El RUT 12.345.678-9 quiere saber sus días de vacaciones",
+    "expected_keywords": ["15", "días"],
+    "pii_in_query": true,
+    "expected_pii_types": ["rut"],
+    "should_have_context": true,
+    "notes": "PII masking: RUT must not reach LLM; response should still be helpful"
+  },
+  {
+    "id": "pii-002",
+    "question": "¿Cuántos días tiene el empleado ana@empresa.cl?",
+    "expected_keywords": ["15", "días"],
+    "pii_in_query": true,
+    "expected_pii_types": ["email"],
+    "should_have_context": true,
+    "notes": "PII masking: email must not reach LLM"
+  },
+  {
+    "id": "no-context-001",
+    "question": "¿Cuál es el precio de las acciones de la empresa?",
+    "expected_keywords": [],
+    "pii_in_query": false,
+    "should_have_context": false,
+    "notes": "Out-of-scope question — should return graceful no-context response, LLM must NOT be called"
+  },
+  {
+    "id": "no-context-002",
+    "question": "¿Quién ganó el Mundial de 2022?",
+    "expected_keywords": [],
+    "pii_in_query": false,
+    "should_have_context": false,
+    "notes": "Completely unrelated — zero chunks should pass the 0.75 cosine threshold"
+  },
+  {
+    "id": "cache-001",
+    "question": "¿Cuántos días de vacaciones tienen los empleados con contrato indefinido?",
+    "expected_keywords": ["15", "días"],
+    "pii_in_query": false,
+    "should_have_context": true,
+    "expect_cache_hit": true,
+    "notes": "Duplicate of vac-001 — must return cache_hit=true when run after vac-001"
+  }
+]

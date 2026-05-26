@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     api_key: str = ""
     max_upload_size_mb: int = 10
 
+    # Audit
+    audit_hash_secret: str = ""  # HMAC secret for query_hash in audit logs
+
     @property
     def auth_enabled(self) -> bool:
         return bool(self.api_key)

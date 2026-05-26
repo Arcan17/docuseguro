@@ -1,3 +1,5 @@
+import hashlib
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -47,7 +49,7 @@ async def query_documents(
     )
     asyncio.create_task(
         log_crm_event(
-            query_hash=result.chunks[0].chunk_id if result.chunks else "none",
+            query_hash=hashlib.sha256(result.clean_query.encode()).hexdigest(),
             latency_ms=result.latency_ms,
             cache_hit=result.cache_hit,
             chunk_count=len(result.chunks),

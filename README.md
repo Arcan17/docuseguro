@@ -42,7 +42,7 @@ curl https://privrag-production.up.railway.app/health
 ```bash
 curl -X POST https://privrag-production.up.railway.app/query \
   -H "Content-Type: application/json" \
-  -d '{"query": "¿Cuántos días de vacaciones tienen los empleados?", "session_id": "demo-001"}'
+  -d '{"query": "¿Cuántos días de vacaciones tienen los empleados?", "session_id": "00000000-0000-0000-0000-000000000001"}'
 ```
 ```json
 {
@@ -59,7 +59,7 @@ curl -X POST https://privrag-production.up.railway.app/query \
 ```bash
 curl -X POST https://privrag-production.up.railway.app/query \
   -H "Content-Type: application/json" \
-  -d '{"query": "¿Cumplió el empleado con RUT 12.345.678-9 y correo ana@empresa.cl sus metas?", "session_id": "demo-002"}'
+  -d '{"query": "¿Cumplió el empleado con RUT 12.345.678-9 y correo ana@empresa.cl sus metas?", "session_id": "00000000-0000-0000-0000-000000000002"}'
 ```
 ```json
 {
@@ -75,7 +75,7 @@ curl -X POST https://privrag-production.up.railway.app/query \
 ```bash
 curl -X POST https://privrag-production.up.railway.app/query \
   -H "Content-Type: application/json" \
-  -d '{"query": "¿Cuántos días de vacaciones tienen los empleados?", "session_id": "demo-003"}'
+  -d '{"query": "¿Cuántos días de vacaciones tienen los empleados?", "session_id": "00000000-0000-0000-0000-000000000001"}'
 ```
 ```json
 {
@@ -215,6 +215,28 @@ pytest -v --tb=short
 | `CHUNK_SIZE` | `800` | Max chars per chunk |
 | `CACHE_TTL_SECONDS` | `3600` | Response cache TTL |
 | `SPACY_ENABLED` | `false` | Enable spaCy NER for person/org detection |
+| `AUDIT_HASH_SECRET` | *(empty)* | HMAC secret for `query_hash` in audit logs — prevents dictionary attacks on low-entropy queries |
+
+---
+
+## Current limitation
+
+During ingestion, document PII is replaced with non-restorable UUID tokens by design — raw identifiers never enter the vector store. Query-time PII is scrubbed and restored only within the current request scope. This means exact identity-based lookups (e.g. "all records for RUT X") are intentionally unsupported in the demo version.
+
+A production implementation would use **deterministic salted tokenization** (HMAC-SHA256 per tenant) so the same identifier always maps to the same token within a tenant boundary, preserving lookup semantics while keeping raw PII out of the vector store and LLM context.
+
+---
+
+## Production hardening roadmap
+
+- Deterministic tenant-scoped HMAC tokenization for cross-query PII matching
+- Per-tenant ChromaDB collections with namespace isolation
+- Role-based access control (document-level permissions)
+- Rate limiting per `session_id` / API key
+- Signed audit hashes (HMAC-SHA256 with per-deployment secret)
+- Background PII token TTL cleanup job with monitoring
+- Evaluation suite: retrieval precision, hallucination rate, PII leakage test
+- Cloud deployment with managed PostgreSQL + pgvector as ChromaDB alternative
 
 ---
 

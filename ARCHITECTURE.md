@@ -117,7 +117,7 @@ POST /query  {"query": "¿RUT 12.345.678-9 cumplió?", "session_id": "..."}
     ├─ [1] PIIScrubber.scrub()     → clean: "¿RUT [uuid-A] cumplió?"
     │                                token_map: {uuid-A: "12.345.678-9"}
     │
-    ├─ [2] embed_query(clean)      → vector (OpenAI, no PII)
+    ├─ [2] embed_query(clean)      → local ONNX embedding via fastembed (BAAI/bge-small-en-v1.5), no external API call
     │
     ├─ [3] vector_store.search()   → top-5 chunks filtered at cosine ≥ 0.75
     │

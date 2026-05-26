@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 import time
 import uuid as uuid_module
 from datetime import UTC, datetime, timedelta
@@ -269,9 +270,10 @@ class RAGPipeline:
         from app.models.query_log import QueryLog  # noqa: PLC0415
 
         sid = self._parse_uuid(session_id)
+        secret = (settings.audit_hash_secret or "privrag-default").encode()
         log = QueryLog(
             session_id=sid,
-            query_hash=hashlib.sha256(query_text.encode()).hexdigest(),
+            query_hash=hmac.new(secret, query_text.encode(), hashlib.sha256).hexdigest(),
             cache_hit=cache_hit,
             chunk_count=chunk_count,
             latency_ms=latency_ms,
