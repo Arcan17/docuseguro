@@ -9,7 +9,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688.svg)](https://fastapi.tiangolo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-<img src="demo.svg" alt="PrivRAG demo — ingest, query, PII stripping, cache hit" width="740"/>
+![PrivRAG demo — RAG query, cache hit, PII masking](assets/privrag-demo.gif)
 
 A production-ready FastAPI backend that lets companies query their internal documents in natural language — **without ever sending sensitive data to an external LLM**.
 
