@@ -35,6 +35,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await create_tables()
     logger.info("db_tables_ready")
 
+    # Warm the embedding model inside the web process. It loads lazily via an
+    # lru_cache on first use, and the startup seed runs in a separate process,
+    # so without this the FIRST user query pays the multi-second model load.
+    try:
+        from app.services.ingestion.embedder import embed_query  # noqa: PLC0415
+
+        await embed_query("warmup")
+        logger.info("embedding_model_warmed")
+    except Exception as exc:  # never block startup on warmup
+        logger.warning("embedding_warmup_failed", error=str(exc))
+
     _scheduler.add_job(_cleanup_expired_pii, "interval", minutes=30, id="pii_cleanup")
     _scheduler.start()
     logger.info("scheduler_started")
