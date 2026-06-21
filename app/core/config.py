@@ -45,12 +45,19 @@ class Settings(BaseSettings):
     api_key: str = ""
     max_upload_size_mb: int = 10
 
+    # CORS — comma-separated list of allowed frontend origins, or "*" for any
+    cors_origins: str = "*"
+
     # Audit
     audit_hash_secret: str = ""  # HMAC secret for query_hash in audit logs
 
     @property
     def auth_enabled(self) -> bool:
         return bool(self.api_key)
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
     @property
     def telegram_enabled(self) -> bool:
