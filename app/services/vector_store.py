@@ -55,6 +55,18 @@ def _sync_upsert(doc_id: str, chunks: list[Chunk], embeddings: list[list[float]]
     logger.info("vectorstore_upsert", doc_id=doc_id, count=len(chunks))
 
 
+async def vector_count() -> int:
+    """Number of chunks currently in the vector store.
+
+    Gates demo seeding: the vector store lives on the container filesystem
+    (ephemeral on Railway) while PostgreSQL is persistent, so they can drift
+    out of sync after a redeploy. Seeding must key off this count, not the
+    Document table, or the demo ends up with rows but no searchable vectors.
+    """
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(_executor, lambda: _get_collection().count())
+
+
 async def search(
     query_embedding: list[float],
     n_results: int = 5,

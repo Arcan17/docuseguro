@@ -11,25 +11,26 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 async def seed_if_empty() -> None:
-    from sqlalchemy import func, select
-
     from app.models.database import AsyncSessionLocal, create_tables
     from app.models.document import Document
     from app.services.ingestion.chunker import semantic_chunk
     from app.services.ingestion.embedder import embed_chunks
     from app.services.ingestion.extractor import extract_text
     from app.services.privacy.scrubber import PIIScrubber
-    from app.services.vector_store import upsert_chunks
+    from app.services.vector_store import upsert_chunks, vector_count
 
     await create_tables()
 
-    async with AsyncSessionLocal() as db:
-        count = await db.scalar(select(func.count()).select_from(Document))
-        if count and count > 0:
-            print(f"[seed] {count} document(s) already loaded — skipping.")
-            return
+    # Gate on the vector store, not the Document table: ChromaDB is ephemeral on
+    # Railway while PostgreSQL persists, so after a redeploy we can have Document
+    # rows but an empty vector store. Re-seeding restores searchable chunks;
+    # duplicate Document rows are skipped gracefully below.
+    vcount = await vector_count()
+    if vcount > 0:
+        print(f"[seed] vector store already has {vcount} chunk(s) — skipping.")
+        return
 
-    print("[seed] No documents found — ingesting demo data...")
+    print("[seed] Vector store empty — ingesting demo data...")
 
     sample_dir = Path(__file__).parent.parent / "data" / "sample_docs"
     docs = sorted(sample_dir.glob("*.txt"))
