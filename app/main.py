@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import delete
 
 from app.core.config import settings
@@ -49,6 +50,14 @@ app = FastAPI(
     description="Privacy-preserving RAG pipeline for enterprise documents",
     version="0.1.0",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origin_list,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 from app.api.routers import health, ingest, metrics, query, webhook  # noqa: E402
