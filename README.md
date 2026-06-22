@@ -13,7 +13,9 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14-000000.svg?logo=next.js)](https://nextjs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-![PrivRAG demo — RAG query, cache hit, PII masking](assets/privrag-demo.gif)
+![PrivRAG web app — ask a question, PII masked before the LLM, cited sources](assets/web-ui.svg)
+
+> The screenshot above mirrors the live UI. For a real capture of the running app, see [privrag.vercel.app](https://privrag.vercel.app).
 
 A production-ready RAG application that lets companies query their internal documents in natural language — **without ever sending sensitive data to an external LLM**. Ships with a FastAPI backend and a Next.js web app, both deployed live.
 
