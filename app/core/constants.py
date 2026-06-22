@@ -1,9 +1,9 @@
-# Retrieval recall: the local embedding model (bge-small-en) compresses Spanish
-# similarity scores into a narrow band (~0.64-0.74 for relevant matches), so the
-# old 0.75 cutoff rejected most valid Spanish queries. 0.60 restores recall; the
-# system prompt instructs the LLM to decline when context lacks the answer, which
-# backstops the occasional marginally-relevant chunk that now passes.
-COSINE_THRESHOLD = 0.60
+# Retrieval recall: the local bge-small-en model compresses Spanish similarity
+# scores into a narrow band (relevant matches ~0.59-0.81), with no clean gap from
+# off-topic queries (~0.57). A high cutoff silently drops valid Spanish questions,
+# so we retrieve generously at 0.50 and let the LLM be the relevance judge — the
+# system prompt instructs it to decline when the context lacks the answer.
+COSINE_THRESHOLD = 0.50
 CHUNK_SIZE = 800
 CHUNK_OVERLAP = 150
 MAX_CONTEXT_TOKENS = 1500
