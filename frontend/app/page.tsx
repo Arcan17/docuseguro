@@ -13,7 +13,7 @@ import {
 const EXAMPLES = [
   "¿Cuántos días de vacaciones tienen los empleados?",
   "¿Cumplió el empleado con RUT 12.345.678-9 y correo ana@empresa.cl sus metas?",
-  "What is the refund policy?",
+  "¿Cuál es la política de devoluciones?",
 ];
 
 function uuid(): string {
@@ -59,7 +59,7 @@ export default function Home() {
       const r = await ingest(f);
       setIngestRes(r);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload failed");
+      setError(e instanceof Error ? e.message : "Error al subir el archivo");
       setFile(null);
     } finally {
       setUploading(false);
@@ -77,7 +77,7 @@ export default function Home() {
       const r = await query(value, sessionId);
       setRes(r);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Query failed");
+      setError(e instanceof Error ? e.message : "Error en la consulta");
     } finally {
       setLoading(false);
     }
@@ -88,24 +88,25 @@ export default function Home() {
       <section className="hero">
         <span className="badge-live">
           <span className={online ? "dot ok" : "dot"} />
-          {online ? `API live · ${provider}` : "Connecting to API…"}
+          {online ? `API en línea · ${provider}` : "Conectando con la API…"}
         </span>
         <h1>
-          Ask your documents anything.
+          Pregúntale lo que sea a tus documentos.
           <br />
-          <span className="grad">Without leaking sensitive data.</span>
+          <span className="grad">Sin filtrar datos sensibles.</span>
         </h1>
         <p>
-          PrivRAG strips PII (RUTs, emails, phones) <strong>before</strong> any
-          text reaches an external LLM. Upload a document, ask in plain language,
-          and see exactly what stayed private.
+          PrivRAG borra los datos privados (RUT, correos, teléfonos){" "}
+          <strong>antes</strong> de que cualquier texto llegue a un LLM externo.
+          Sube un documento, pregunta en lenguaje natural y mira exactamente qué
+          se mantuvo privado.
         </p>
       </section>
 
-      {/* Step 1 — upload */}
+      {/* Paso 1 — subir */}
       <div className="card">
         <h2>
-          <span className="step">1</span>Upload a document
+          <span className="step">1</span>Sube un documento
         </h2>
         <div
           className={dragging ? "drop drag" : "drop"}
@@ -130,33 +131,34 @@ export default function Home() {
           />
           <div style={{ fontSize: 15, marginBottom: 4 }}>
             {uploading
-              ? "Scrubbing PII & indexing…"
-              : "Drop a PDF or .txt here, or click to choose"}
+              ? "Borrando datos privados e indexando…"
+              : "Arrastra un PDF o .txt aquí, o haz clic para elegir"}
           </div>
           <div className="hint">
-            Or skip this — the live demo already has sample HR docs loaded.
+            O sáltatelo — la demo ya tiene documentos de RR.HH. de ejemplo
+            cargados.
           </div>
         </div>
         {file && (
           <div className={ingestRes ? "filechip ok" : "filechip"}>
             {uploading ? <span className="spinner" /> : "📄"} {file.name}
             {ingestRes &&
-              ` · ${ingestRes.chunk_count} chunks${
-                ingestRes.pii_scrubbed ? " · PII scrubbed 🔒" : ""
+              ` · ${ingestRes.chunk_count} fragmentos${
+                ingestRes.pii_scrubbed ? " · datos privados borrados 🔒" : ""
               }`}
           </div>
         )}
       </div>
 
-      {/* Step 2 — ask */}
+      {/* Paso 2 — preguntar */}
       <div className="card">
         <h2>
-          <span className="step">2</span>Ask a question
+          <span className="step">2</span>Haz una pregunta
         </h2>
         <div className="qrow">
           <textarea
             rows={2}
-            placeholder="e.g. How many vacation days do employees get?"
+            placeholder="ej. ¿Cuántos días de vacaciones tienen los empleados?"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => {
@@ -168,7 +170,7 @@ export default function Home() {
             disabled={loading || !q.trim()}
             onClick={() => runQuery()}
           >
-            {loading ? <span className="spinner" /> : "Ask"}
+            {loading ? <span className="spinner" /> : "Preguntar"}
           </button>
         </div>
         <div className="examples">
@@ -181,44 +183,46 @@ export default function Home() {
         {error && <div className="error">⚠ {error}</div>}
       </div>
 
-      {/* Step 3 — answer */}
+      {/* Paso 3 — respuesta */}
       {res && (
         <div className="card">
           <h2>
-            <span className="step">3</span>Answer
+            <span className="step">3</span>Respuesta
           </h2>
           <div className="answer">{res.answer}</div>
 
           <div className="metrics">
             {res.pii_found ? (
               <span className="metric green">
-                🔒 PII masked: {res.pii_types.join(", ")}
+                🔒 Datos privados ocultados: {res.pii_types.join(", ")}
               </span>
             ) : (
-              <span className="metric">🔓 No PII detected</span>
+              <span className="metric">🔓 Sin datos privados detectados</span>
             )}
             {res.cache_hit ? (
-              <span className="metric green">⚡ Cache hit</span>
+              <span className="metric green">⚡ Respuesta en caché</span>
             ) : (
-              <span className="metric">🧠 Fresh LLM call</span>
+              <span className="metric">🧠 Consulta nueva al LLM</span>
             )}
             <span className="metric indigo">⏱ {res.latency_ms} ms</span>
             {res.tokens_saved_pct != null && (
               <span className="metric amber">
-                ✂ {res.tokens_saved_pct.toFixed(1)}% tokens saved
+                ✂ {res.tokens_saved_pct.toFixed(1)}% tokens ahorrados
               </span>
             )}
-            <span className="metric">📚 {res.chunk_count} sources</span>
+            <span className="metric">📚 {res.chunk_count} fuentes</span>
             <span className="metric">🤖 {res.llm_provider}</span>
           </div>
 
           {res.source_chunks.length > 0 && (
             <details className="sources">
-              <summary>Show retrieved sources ({res.source_chunks.length})</summary>
+              <summary>
+                Ver fuentes recuperadas ({res.source_chunks.length})
+              </summary>
               {res.source_chunks.map((c) => (
                 <div className="source" key={c.chunk_id}>
                   <span className="sim">{(c.similarity * 100).toFixed(1)}%</span>{" "}
-                  match · {c.text_preview}
+                  de coincidencia · {c.text_preview}
                 </div>
               ))}
             </details>
@@ -227,11 +231,11 @@ export default function Home() {
       )}
 
       <div className="footer">
-        Powered by{" "}
+        Funciona con{" "}
         <a href={`${API_BASE}/docs`} target="_blank" rel="noreferrer">
-          the PrivRAG API
+          la API de PrivRAG
         </a>{" "}
-        · embeddings run locally · the LLM never sees your raw PII
+        · los embeddings corren localmente · el LLM nunca ve tus datos privados
       </div>
     </main>
   );
