@@ -10,6 +10,7 @@
 [![CI](https://github.com/Arcan17/privrag/actions/workflows/ci.yml/badge.svg)](https://github.com/Arcan17/privrag/actions/workflows/ci.yml)
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688.svg)](https://fastapi.tiangolo.com)
+[![Next.js](https://img.shields.io/badge/Next.js-14-000000.svg?logo=next.js)](https://nextjs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ![PrivRAG demo — RAG query, cache hit, PII masking](assets/privrag-demo.gif)
@@ -20,7 +21,7 @@ Built to demonstrate four enterprise AI engineering capabilities:
 
 | Capability | Implementation | Key Metric |
 |-----------|---------------|------------|
-| **RAG + semantic chunking** | ChromaDB + cosine threshold 0.75 | Rejects low-quality context before LLM call |
+| **RAG + semantic chunking** | ChromaDB + cosine threshold (0.50) | Retrieves relevant context; the LLM answers strictly from it |
 | **Token optimization** | SHA256 cache (PostgreSQL) + sentence compression | 30-45% cache hit rate, ~15% tokens saved |
 | **PII stripping** | Regex (Chilean RUT / email / phone) + optional spaCy | 100% RUT & email detection |
 | **Workflow automation** | Telegram Bot + simulated CRM webhook + `/metrics` | Non-blocking async notifications |
@@ -132,6 +133,8 @@ Especially relevant for companies handling regulated data:
 ## Architecture
 
 ```
+Next.js web app (Vercel)  ──HTTPS / CORS──▶  FastAPI backend (Railway)
+
 POST /ingest (PDF / .txt)
      ├─ [1] Extract text  →  pypdf or utf-8 decode
      ├─ [2] PII Scrubber  →  RUT / email / phone replaced with [uuid] (NOT restorable — by design)
@@ -142,7 +145,7 @@ POST /ingest (PDF / .txt)
 POST /query {"query": "¿Cumplió el empleado 12.345.678-9?", "session_id": "..."}
      ├─ [1] PII Scrubber  →  "12.345.678-9" → [uuid]  (in-memory token map)
      ├─ [2] Embedding     →  fastembed local ONNX  (clean query, no PII)
-     ├─ [3] Vector search →  ChromaDB cosine ≥ 0.75  (low-quality chunks rejected)
+     ├─ [3] Vector search →  ChromaDB cosine ≥ 0.50  (LLM declines if context insufficient)
      ├─ [4] Cache lookup  →  SHA256(query + context) → PostgreSQL  (HIT: ~18ms)
      ├─ [5] Compression   →  sentence dedup + tiktoken trim  (MISS path only)
      ├─ [6] LLM call      →  Groq / Anthropic / OpenAI  (never sees raw PII)
@@ -237,7 +240,8 @@ pytest -v --tb=short
 | `ANTHROPIC_API_KEY` | — | Required when `LLM_PROVIDER=anthropic` |
 | `OPENAI_API_KEY` | — | Required when `LLM_PROVIDER=openai` |
 | `API_KEY` | *(empty)* | Auth key. Leave empty to disable in local dev |
-| `COSINE_SIMILARITY_THRESHOLD` | `0.75` | Min similarity to include a chunk |
+| `COSINE_SIMILARITY_THRESHOLD` | `0.50` | Min similarity to include a chunk (tuned for Spanish recall; the LLM declines when context is insufficient) |
+| `CORS_ORIGINS` | `*` | Comma-separated allowed frontend origins |
 | `CHUNK_SIZE` | `800` | Max chars per chunk |
 | `CACHE_TTL_SECONDS` | `3600` | Response cache TTL |
 | `SPACY_ENABLED` | `false` | Enable spaCy NER for person/org detection |
@@ -263,6 +267,20 @@ A production implementation would use **deterministic salted tokenization** (HMA
 - Background PII token TTL cleanup job with monitoring
 - Evaluation suite: retrieval precision, hallucination rate, PII leakage test
 - Cloud deployment with managed PostgreSQL + pgvector as ChromaDB alternative
+
+---
+
+## Deployment
+
+Both halves run in production, deployed straight from `main`:
+
+| Component | Platform | URL |
+|-----------|----------|-----|
+| Web app (Next.js) | Vercel (root dir `frontend/`) | https://privrag.vercel.app |
+| API (FastAPI) | Railway (Docker, managed PostgreSQL) | https://privrag-production.up.railway.app |
+| CI | GitHub Actions | 61 tests, zero LLM calls in the pipeline |
+
+The backend warms the embedding model on startup and seeds demo documents on each cold start, so the public demo is usable without any setup. CORS is configurable via `CORS_ORIGINS`.
 
 ---
 
