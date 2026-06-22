@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     crm_webhook_url: str = "http://localhost:8000/webhook/crm"
 
     # RAG tuning
-    cosine_similarity_threshold: float = 0.75
+    cosine_similarity_threshold: float = 0.60
     chunk_size: int = 800
     chunk_overlap: int = 150
     max_context_tokens: int = 1500
