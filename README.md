@@ -2,7 +2,10 @@
 
 > Privacy-preserving RAG pipeline for enterprise documents
 
-**🚀 [Live API Demo](https://privrag-production.up.railway.app/docs)** · [Health check](https://privrag-production.up.railway.app/health)
+**🌐 [Try the live web app](https://privrag.vercel.app)** · **[API demo (Swagger)](https://privrag-production.up.railway.app/docs)** · [Health check](https://privrag-production.up.railway.app/health)
+
+> Upload a document, ask a question in plain language, and watch PrivRAG strip
+> RUTs / emails / phones **before** anything reaches the LLM. No signup required.
 
 [![CI](https://github.com/Arcan17/privrag/actions/workflows/ci.yml/badge.svg)](https://github.com/Arcan17/privrag/actions/workflows/ci.yml)
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
@@ -11,7 +14,7 @@
 
 ![PrivRAG demo — RAG query, cache hit, PII masking](assets/privrag-demo.gif)
 
-A production-ready FastAPI backend that lets companies query their internal documents in natural language — **without ever sending sensitive data to an external LLM**.
+A production-ready RAG application that lets companies query their internal documents in natural language — **without ever sending sensitive data to an external LLM**. Ships with a FastAPI backend and a Next.js web app, both deployed live.
 
 Built to demonstrate four enterprise AI engineering capabilities:
 
@@ -24,7 +27,18 @@ Built to demonstrate four enterprise AI engineering capabilities:
 
 ---
 
-## Try it live
+## Web app
+
+A **[Next.js web app](https://privrag.vercel.app)** (deployed on Vercel) puts a face on the API: drag in a PDF or `.txt`, ask a question, and see the privacy and performance internals surfaced live — masked PII types, cache hits, latency, tokens saved, and the retrieved source chunks.
+
+- **Live:** https://privrag.vercel.app (no signup)
+- **Source:** [`frontend/`](frontend/) — Next.js 14 + TypeScript, talks to the API via `NEXT_PUBLIC_API_BASE`
+- Sample HR documents are pre-loaded, so the example questions work out of the box; or upload your own file.
+
+> First query after the backend has been idle can take a few seconds while the
+> container wakes; subsequent queries are ~1s, and cache hits ~250ms.
+
+## Try it live (API)
 
 The API is deployed on Railway with demo documents pre-loaded. No API key required for the public demo.
 
@@ -176,6 +190,18 @@ curl http://localhost:8000/health
 # {"status":"ok","provider":"groq"}
 ```
 
+### Web app (frontend)
+
+```bash
+cd frontend
+npm install
+# point at your API (defaults to the live Railway deployment)
+echo "NEXT_PUBLIC_API_BASE=http://localhost:8000" > .env.local
+npm run dev          # http://localhost:3000
+```
+
+Deployed on Vercel with **Root Directory = `frontend`** (framework auto-detected as Next.js).
+
 ---
 
 ## API reference
@@ -242,6 +268,7 @@ A production implementation would use **deterministic salted tokenization** (HMA
 
 ## Stack
 
+- **Next.js 14 + TypeScript** — web app ([`frontend/`](frontend/)), deployed on Vercel
 - **Python 3.11** — FastAPI, SQLAlchemy 2.0 async, Pydantic v2
 - **PostgreSQL 16** — query cache, audit log, PII token store (TTL-governed)
 - **ChromaDB 0.5** — vector store (cosine similarity, persistent volume)
