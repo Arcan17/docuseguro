@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PrivRAG — Query your documents without leaking PII",
+  title: "PrivRAG — Consulta tus documentos sin filtrar datos privados",
   description:
-    "Privacy-preserving RAG. Ask questions over your internal documents in natural language — no sensitive data ever reaches an external LLM.",
+    "RAG con privacidad. Haz preguntas a tus documentos internos en lenguaje natural — sin que ningún dato sensible llegue a un LLM externo.",
 };
 
 export default function RootLayout({
