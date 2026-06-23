@@ -60,9 +60,13 @@ export async function query(
   return res.json();
 }
 
-export async function ingest(file: File): Promise<IngestResponse> {
+export async function ingest(
+  file: File,
+  sessionId: string
+): Promise<IngestResponse> {
   const form = new FormData();
   form.append("file", file);
+  form.append("session_id", sessionId);
   const res = await fetch(`${API_BASE}/ingest`, {
     method: "POST",
     headers: { ...authHeaders() },

@@ -40,17 +40,39 @@ class SearchResult:
         return 1.0 - self.distance
 
 
-async def upsert_chunks(doc_id: str, chunks: list[Chunk], embeddings: list[list[float]]) -> None:
-    """Insert or update chunks in the vector store."""
+async def upsert_chunks(
+    doc_id: str,
+    chunks: list[Chunk],
+    embeddings: list[list[float]],
+    metadata_extra: dict[str, Any] | None = None,
+) -> None:
+    """Insert or update chunks in the vector store.
+
+    `metadata_extra` is merged into every chunk's metadata — used to tag the
+    owning session and source ("demo" vs "upload") so search can isolate a
+    user's uploads from everyone else's and cleanup can expire them.
+    """
     loop = asyncio.get_event_loop()
-    await loop.run_in_executor(_executor, _sync_upsert, doc_id, chunks, embeddings)
+    await loop.run_in_executor(
+        _executor, _sync_upsert, doc_id, chunks, embeddings, metadata_extra
+    )
 
 
-def _sync_upsert(doc_id: str, chunks: list[Chunk], embeddings: list[list[float]]) -> None:
+def _sync_upsert(
+    doc_id: str,
+    chunks: list[Chunk],
+    embeddings: list[list[float]],
+    metadata_extra: dict[str, Any] | None = None,
+) -> None:
     col = _get_collection()
     ids = [f"{doc_id}_{c.index}" for c in chunks]
     documents = [c.text for c in chunks]
-    metadatas = [{"doc_id": doc_id, "index": c.index} for c in chunks]
+    metadatas: list[dict[str, Any]] = []
+    for c in chunks:
+        meta: dict[str, Any] = {"doc_id": doc_id, "index": c.index}
+        if metadata_extra:
+            meta.update(metadata_extra)
+        metadatas.append(meta)
     col.upsert(ids=ids, documents=documents, embeddings=embeddings, metadatas=metadatas)
     logger.info("vectorstore_upsert", doc_id=doc_id, count=len(chunks))
 
@@ -71,15 +93,21 @@ async def search(
     query_embedding: list[float],
     n_results: int = 5,
     threshold: float | None = None,
+    session_id: str | None = None,
 ) -> list[SearchResult]:
-    """Search for similar chunks. Filter by cosine distance (1 - similarity)."""
+    """Search for similar chunks. Filter by cosine distance (1 - similarity).
+
+    Isolation: a query only retrieves the shared demo documents plus the
+    chunks uploaded by `session_id`. One user can never see another user's
+    uploaded documents.
+    """
     if threshold is None:
         threshold = settings.cosine_similarity_threshold
     distance_threshold = 1.0 - threshold
 
     loop = asyncio.get_event_loop()
     results = await loop.run_in_executor(
-        _executor, _sync_search, query_embedding, n_results
+        _executor, _sync_search, query_embedding, n_results, session_id
     )
 
     filtered = [r for r in results if r.distance <= distance_threshold]
@@ -92,16 +120,26 @@ async def search(
     return filtered
 
 
-def _sync_search(query_embedding: list[float], n_results: int) -> list[SearchResult]:
+def _sync_search(
+    query_embedding: list[float], n_results: int, session_id: str | None = None
+) -> list[SearchResult]:
     col = _get_collection()
     count = col.count()
     if count == 0:
         return []
 
+    # Only the shared demo docs + this session's own uploads are visible.
+    where: dict[str, Any] | None
+    if session_id:
+        where = {"$or": [{"source": "demo"}, {"session_id": session_id}]}
+    else:
+        where = {"source": "demo"}
+
     actual_n = min(n_results, count)
     raw = col.query(
         query_embeddings=[query_embedding],
         n_results=actual_n,
+        where=where,
         include=["documents", "distances", "metadatas"],
     )
 
@@ -131,3 +169,24 @@ async def delete_document(doc_id: str) -> None:
 def _sync_delete(doc_id: str) -> None:
     col = _get_collection()
     col.delete(where={"doc_id": doc_id})
+
+
+async def delete_expired_uploads(ttl_seconds: int) -> None:
+    """Delete user-uploaded chunks older than `ttl_seconds`.
+
+    Demo docs (source="demo") are never deleted. This is what makes the
+    "what you upload is not stored" promise true: uploads are purged on a
+    timer so a user's document does not linger in the vector store.
+    """
+    import time  # noqa: PLC0415
+
+    cutoff = time.time() - ttl_seconds
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(_executor, _sync_delete_expired_uploads, cutoff)
+
+
+def _sync_delete_expired_uploads(cutoff: float) -> None:
+    col = _get_collection()
+    col.delete(
+        where={"$and": [{"source": "upload"}, {"uploaded_at": {"$lt": cutoff}}]}
+    )

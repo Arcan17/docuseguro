@@ -56,7 +56,7 @@ export default function Home() {
     setError(null);
     setUploading(true);
     try {
-      const r = await ingest(f);
+      const r = await ingest(f, sessionId);
       setIngestRes(r);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al subir el archivo");

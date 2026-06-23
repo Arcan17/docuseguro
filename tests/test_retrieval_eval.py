@@ -34,7 +34,9 @@ def _unit_vec(cosine_sim: float, dim: int = 8) -> list[float]:
 
 
 def _store(doc_id: str, text: str, emb: list[float]) -> None:
-    _sync_upsert(doc_id, [Chunk(text=text, index=0, doc_id=doc_id)], [emb])
+    _sync_upsert(
+        doc_id, [Chunk(text=text, index=0, doc_id=doc_id)], [emb], {"source": "demo"}
+    )
 
 
 _QUERY_8D = [1.0] + [0.0] * 7
@@ -162,6 +164,7 @@ def corpus(chroma384):
             item["id"],
             [Chunk(text=item["text"], index=0, doc_id=item["id"])],
             [emb],
+            {"source": "demo"},
         )
     return chroma384
 

@@ -1,6 +1,8 @@
 import hashlib
+import time
+import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,8 +27,12 @@ ALLOWED_EXTENSIONS = {".pdf", ".txt"}
 @router.post("", response_model=IngestResponse, dependencies=[Depends(require_api_key)])
 async def ingest_document(
     file: UploadFile,
+    session_id: str = Form(default=""),
     db: AsyncSession = Depends(get_db),
 ) -> IngestResponse:
+    # Each upload is owned by a session so search can isolate it from other
+    # users and cleanup can expire it. No session given -> orphan (still purged).
+    owner_session = session_id or str(uuid.uuid4())
     filename = file.filename or "unknown"
     ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     if ext not in ALLOWED_EXTENSIONS:
@@ -81,7 +87,16 @@ async def ingest_document(
 
         chunks = semantic_chunk(clean_text, doc_id=doc_id)
         embeddings = await embed_chunks(chunks)
-        await upsert_chunks(doc_id, chunks, embeddings)
+        await upsert_chunks(
+            doc_id,
+            chunks,
+            embeddings,
+            metadata_extra={
+                "source": "upload",
+                "session_id": owner_session,
+                "uploaded_at": time.time(),
+            },
+        )
 
         doc.chunk_count = len(chunks)
         doc.status = "ready"
