@@ -271,11 +271,43 @@ button.primary:disabled {
   font-size: 14px;
   margin-top: 12px;
 }
+.legal {
+  color: var(--text);
+  line-height: 1.65;
+  font-size: 15px;
+}
+.legal h2 {
+  font-size: 18px;
+  margin: 26px 0 8px;
+  color: var(--text);
+}
+.legal p {
+  color: var(--muted);
+}
+.legal ul {
+  color: var(--muted);
+  padding-left: 20px;
+}
+.legal li {
+  margin: 6px 0;
+}
+.legal strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
 .footer {
   text-align: center;
   color: var(--muted);
   font-size: 13px;
   margin-top: 40px;
+}
+.footer a.legal-link {
+  color: var(--muted);
+  text-decoration: underline;
+}
+.footer a.legal-link:hover {
+  color: var(--accent);
 }
 .footer a {
   color: var(--accent);

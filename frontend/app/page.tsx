@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   API_BASE,
@@ -139,6 +140,14 @@ export default function Home() {
             cargados.
           </div>
         </div>
+        <div className="hint" style={{ marginTop: 10, fontSize: 12.5 }}>
+          🔒 Demo: lo que subes está aislado por sesión y se elimina solo. No
+          subas datos confidenciales de terceros. Ver{" "}
+          <Link href="/privacidad" style={{ color: "var(--accent)" }}>
+            aviso de privacidad
+          </Link>
+          .
+        </div>
         {file && (
           <div className={ingestRes ? "filechip ok" : "filechip"}>
             {uploading ? <span className="spinner" /> : "📄"} {file.name}
@@ -236,6 +245,10 @@ export default function Home() {
           la API de PrivRAG
         </a>{" "}
         · los embeddings corren localmente · el LLM nunca ve tus datos privados
+        <br />
+        <Link href="/privacidad" className="legal-link">
+          Aviso de privacidad
+        </Link>
       </div>
     </main>
   );
