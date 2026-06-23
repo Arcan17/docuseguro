@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     # Privacy
     spacy_enabled: bool = False
     pii_token_ttl_seconds: int = 7200
+    # User-uploaded documents are auto-deleted from the vector store after this
+    # window, so nothing a user uploads is stored permanently.
+    upload_ttl_seconds: int = 3600
 
     # Auth
     api_key: str = ""

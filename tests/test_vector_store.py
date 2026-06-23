@@ -32,12 +32,29 @@ def test_upsert_and_search(temp_chroma) -> None:
     ]
     embeddings = [_make_embedding(0.9), _make_embedding(0.1)]
 
-    _sync_upsert("doc_1", chunks, embeddings)
+    _sync_upsert("doc_1", chunks, embeddings, {"source": "upload", "session_id": "s1"})
 
-    # Search with embedding similar to first chunk
-    results = _sync_search(_make_embedding(0.9), n_results=2)
+    # The owning session sees its own upload
+    results = _sync_search(_make_embedding(0.9), n_results=2, session_id="s1")
     assert len(results) > 0
     assert all(isinstance(r, SearchResult) for r in results)
+
+
+def test_uploads_are_isolated_per_session(temp_chroma) -> None:
+    chunks = [Chunk(text="Documento confidencial del usuario A.", index=0, doc_id="docA")]
+    _sync_upsert("docA", chunks, [_make_embedding(0.9)], {"source": "upload", "session_id": "userA"})
+
+    # A different session must NOT retrieve user A's upload
+    results = _sync_search(_make_embedding(0.9), n_results=5, session_id="userB")
+    assert results == []
+
+
+def test_demo_docs_visible_to_any_session(temp_chroma) -> None:
+    chunks = [Chunk(text="Documento de ejemplo compartido.", index=0, doc_id="demo1")]
+    _sync_upsert("demo1", chunks, [_make_embedding(0.9)], {"source": "demo"})
+
+    results = _sync_search(_make_embedding(0.9), n_results=5, session_id="cualquiera")
+    assert len(results) > 0
 
 
 def test_search_empty_store(temp_chroma) -> None:

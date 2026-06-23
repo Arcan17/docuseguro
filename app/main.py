@@ -28,6 +28,12 @@ async def _cleanup_expired_pii() -> None:
             logger.info("pii_cleanup", deleted=result.rowcount)
 
 
+async def _cleanup_expired_uploads() -> None:
+    from app.services.vector_store import delete_expired_uploads  # noqa: PLC0415
+
+    await delete_expired_uploads(settings.upload_ttl_seconds)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("startup", provider=settings.llm_provider, log_level=settings.log_level)
@@ -47,6 +53,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         logger.warning("embedding_warmup_failed", error=str(exc))
 
     _scheduler.add_job(_cleanup_expired_pii, "interval", minutes=30, id="pii_cleanup")
+    _scheduler.add_job(
+        _cleanup_expired_uploads, "interval", minutes=10, id="upload_cleanup"
+    )
     _scheduler.start()
     logger.info("scheduler_started")
 

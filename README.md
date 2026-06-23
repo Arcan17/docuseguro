@@ -167,6 +167,8 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for full diagrams and design decisions.
 | Telegram notification | PII-type summary only — never the original value |
 | CRM webhook | Query hash, latency, cache status — no query text |
 
+Uploaded documents are **isolated per session** (a user can only query the shared demo docs plus their own uploads — never another user's) and **auto-deleted** after `UPLOAD_TTL_SECONDS`, so nothing a visitor uploads is stored permanently or shared.
+
 ---
 
 ## Quick start (local)
@@ -247,6 +249,7 @@ pytest -v --tb=short
 | `CHUNK_SIZE` | `800` | Max chars per chunk |
 | `CACHE_TTL_SECONDS` | `3600` | Response cache TTL |
 | `SPACY_ENABLED` | `false` | Enable spaCy NER for person/org detection |
+| `UPLOAD_TTL_SECONDS` | `3600` | Auto-delete user-uploaded docs after this window (per-session isolated) |
 | `AUDIT_HASH_SECRET` | *(empty)* | HMAC secret for `query_hash` in audit logs — prevents dictionary attacks on low-entropy queries |
 
 ---

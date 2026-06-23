@@ -100,8 +100,9 @@ class RAGPipeline:
         # Step 2: Embed (uses clean query — no PII sent to OpenAI embeddings)
         query_embedding = await embed_query(clean_query)
 
-        # Step 3: Retrieve chunks with cosine similarity threshold
-        chunks = await search(query_embedding, n_results=5)
+        # Step 3: Retrieve chunks with cosine similarity threshold.
+        # Scoped to this session: demo docs + only this user's own uploads.
+        chunks = await search(query_embedding, n_results=5, session_id=session_id)
 
         if not chunks:
             latency = int((time.monotonic() - t0) * 1000)

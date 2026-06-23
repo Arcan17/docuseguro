@@ -48,7 +48,10 @@ async def seed_if_empty() -> None:
             clean_text, _token_map, pii_types = scrubber.scrub(text)
             chunks = semantic_chunk(clean_text, doc_id=doc_path.stem)
             embeddings = await embed_chunks(chunks)
-            await upsert_chunks(doc_path.stem, chunks, embeddings)
+            # Demo docs are shared and never expired (visible to every visitor).
+            await upsert_chunks(
+                doc_path.stem, chunks, embeddings, metadata_extra={"source": "demo"}
+            )
 
             doc = Document(
                 filename=doc_path.name,
