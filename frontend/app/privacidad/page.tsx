@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Aviso de Privacidad — PrivRAG",
   description:
-    "Cómo PrivRAG trata la información, en línea con los principios de la Ley N° 21.719 de protección de datos personales de Chile.",
+    "Cómo PrivRAG trata la información, inspirado en buenas prácticas de protección de datos personales.",
 };
 
 export default function Privacidad() {
@@ -23,8 +23,9 @@ export default function Privacidad() {
         <p>
           PrivRAG es una herramienta de demostración que permite consultar documentos
           en lenguaje natural protegiendo los datos personales. Este aviso explica cómo
-          tratamos la información, siguiendo los principios de la Ley N° 21.719 sobre
-          protección de datos personales de Chile.
+          tratamos la información, inspirado en buenas prácticas de protección de datos.
+          (En Chile, la Ley N° 21.719 sobre protección de datos personales se informa con
+          entrada en vigencia hacia fines de 2026.)
         </p>
 
         <h2>1. Qué información tratamos</h2>
@@ -57,7 +58,7 @@ export default function Privacidad() {
           <li>
             Para poder mostrar de vuelta en la respuesta los identificadores que
             detectamos (como un RUT), estos se guardan de forma{" "}
-            <strong>temporal (máximo 2 horas)</strong> y luego se eliminan. Nunca se
+            <strong>temporal (alrededor de 2 horas)</strong> y luego se eliminan. Nunca se
             envían a la IA.
           </li>
         </ul>
@@ -65,10 +66,10 @@ export default function Privacidad() {
         <h2>4. Inteligencia artificial y terceros</h2>
         <p>
           Para generar las respuestas, el texto —ya <strong>sin los datos personales
-          identificables</strong>— se envía a un proveedor de modelos de lenguaje (Groq,
-          con servidores en Estados Unidos). Los datos sensibles (RUT, correos, teléfonos)
-          se eliminan <strong>antes</strong> de este paso, por lo que el proveedor no los
-          recibe.
+          identificables</strong>— se envía a un proveedor externo de modelos de lenguaje
+          (actualmente Groq, con servidores en Estados Unidos). Los datos sensibles (RUT,
+          correos, teléfonos) se eliminan <strong>antes</strong> de este paso, por lo que
+          el proveedor no los recibe.
         </p>
 
         <h2>5. Tus derechos</h2>

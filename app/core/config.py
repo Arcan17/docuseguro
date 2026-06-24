@@ -48,8 +48,14 @@ class Settings(BaseSettings):
     api_key: str = ""
     max_upload_size_mb: int = 10
 
-    # CORS — comma-separated list of allowed frontend origins, or "*" for any
-    cors_origins: str = "*"
+    # Rate limiting — max requests per minute per client IP (0 disables)
+    rate_limit_per_minute: int = 30
+
+    # CORS — comma-separated allowed frontend origins. Locked to the production
+    # site + local dev by default; override with CORS_ORIGINS (or "*" for any).
+    cors_origins: str = (
+        "https://privrag.vercel.app,http://localhost:3000,http://localhost:3100"
+    )
 
     # Audit
     audit_hash_secret: str = ""  # HMAC secret for query_hash in audit logs
@@ -70,5 +76,17 @@ class Settings(BaseSettings):
     def effective_context_token_limit(self) -> int:
         return int(self.max_context_tokens * 0.85)
 
+    @property
+    def effective_audit_secret(self) -> str:
+        # Never fall back to a known constant. If unset, use a per-process random
+        # secret so audit query hashes can't be reversed with a dictionary.
+        if self.audit_hash_secret:
+            return self.audit_hash_secret
+        return _RUNTIME_AUDIT_SECRET
+
+
+import secrets as _secrets  # noqa: E402
+
+_RUNTIME_AUDIT_SECRET = _secrets.token_hex(32)
 
 settings = Settings()
