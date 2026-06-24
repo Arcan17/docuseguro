@@ -8,9 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas.ingest import IngestResponse
 from app.core.auth import require_api_key
-from app.core.rate_limit import rate_limit
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.core.rate_limit import rate_limit
 from app.models.database import get_db
 from app.models.document import Document
 from app.services.ingestion.chunker import semantic_chunk
