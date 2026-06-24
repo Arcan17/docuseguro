@@ -54,6 +54,12 @@ export default function Privacidad() {
             Se <strong>elimina automáticamente</strong> del sistema. No conservamos copias
             permanentes de tus documentos.
           </li>
+          <li>
+            Para poder mostrar de vuelta en la respuesta los identificadores que
+            detectamos (como un RUT), estos se guardan de forma{" "}
+            <strong>temporal (máximo 2 horas)</strong> y luego se eliminan. Nunca se
+            envían a la IA.
+          </li>
         </ul>
 
         <h2>4. Inteligencia artificial y terceros</h2>
@@ -88,8 +94,13 @@ export default function Privacidad() {
 
         <h2>8. Contacto</h2>
         <p>
-          Para consultas sobre privacidad, escribe a{" "}
-          <strong>[tu correo de contacto]</strong>.
+          Para consultas sobre privacidad o para ejercer tus derechos, escribe a{" "}
+          <strong>
+            <a href="mailto:bast-1996@hotmail.com" style={{ color: "var(--accent)" }}>
+              bast-1996@hotmail.com
+            </a>
+          </strong>
+          .
         </p>
       </div>
     </main>
