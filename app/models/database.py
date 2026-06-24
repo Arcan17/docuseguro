@@ -5,6 +5,7 @@ import app.models.document  # noqa: F401
 import app.models.pii_token  # noqa: F401
 import app.models.query_cache  # noqa: F401
 import app.models.query_log  # noqa: F401
+import app.models.user  # noqa: F401
 from app.core.config import settings
 from app.models.base import Base
 

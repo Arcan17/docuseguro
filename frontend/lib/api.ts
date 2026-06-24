@@ -7,7 +7,15 @@ export const API_BASE =
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "";
 
 function authHeaders(): Record<string, string> {
-  return API_KEY ? { "X-API-Key": API_KEY } : {};
+  const headers: Record<string, string> = {};
+  if (API_KEY) headers["X-API-Key"] = API_KEY;
+  // Send the bearer token if the user is logged in (read directly from storage
+  // to avoid an import cycle with auth.ts).
+  if (typeof window !== "undefined") {
+    const token = window.localStorage.getItem("privrag_token");
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
 }
 
 export interface SourceChunk {

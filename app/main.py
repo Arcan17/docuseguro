@@ -80,9 +80,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.api.routers import health, ingest, metrics, query, webhook  # noqa: E402
+from app.api.routers import auth, health, ingest, metrics, query, webhook  # noqa: E402
 
 app.include_router(health.router)
+app.include_router(auth.router)
 app.include_router(ingest.router)
 app.include_router(query.router)
 app.include_router(webhook.router)

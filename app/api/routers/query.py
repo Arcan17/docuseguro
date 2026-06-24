@@ -3,10 +3,12 @@ import hashlib
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_optional_user
 from app.api.schemas.query import QueryRequest, QueryResponse, SourceChunk
 from app.core.auth import require_api_key
 from app.core.rate_limit import rate_limit
 from app.models.database import get_db
+from app.models.user import User
 from app.services.rag_pipeline import RAGPipeline
 
 router = APIRouter(prefix="/query", tags=["query"])
@@ -19,12 +21,17 @@ router = APIRouter(prefix="/query", tags=["query"])
 )
 async def query_documents(
     request: QueryRequest,
+    user: User | None = Depends(get_optional_user),
     db: AsyncSession = Depends(get_db),
 ) -> QueryResponse:
+    # Search is scoped to this owner: the account if authenticated, else the
+    # anonymous browser session.
+    owner = f"user:{user.id}" if user is not None else request.session_id
     pipeline = RAGPipeline(db)
     result = await pipeline.query(
         session_id=request.session_id,
         query_text=request.query,
+        owner=owner,
     )
 
     source_chunks = [

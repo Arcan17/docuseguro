@@ -60,6 +60,11 @@ class Settings(BaseSettings):
     # Audit
     audit_hash_secret: str = ""  # HMAC secret for query_hash in audit logs
 
+    # Auth (Fase 1 — cuentas)
+    jwt_secret: str = ""  # signing key for JWT; random per-process if empty
+    jwt_expire_minutes: int = 10080  # 7 days
+    password_min_length: int = 8
+
     @property
     def auth_enabled(self) -> bool:
         return bool(self.api_key)
@@ -84,9 +89,18 @@ class Settings(BaseSettings):
             return self.audit_hash_secret
         return _RUNTIME_AUDIT_SECRET
 
+    @property
+    def effective_jwt_secret(self) -> str:
+        # Same pattern: never a known default. Set JWT_SECRET in production so
+        # tokens survive restarts; otherwise a per-process random key is used.
+        if self.jwt_secret:
+            return self.jwt_secret
+        return _RUNTIME_JWT_SECRET
+
 
 import secrets as _secrets  # noqa: E402
 
 _RUNTIME_AUDIT_SECRET = _secrets.token_hex(32)
+_RUNTIME_JWT_SECRET = _secrets.token_hex(32)
 
 settings = Settings()

@@ -41,8 +41,17 @@ export default function Privacidad() {
 
         <h2>2. Para qué la usamos</h2>
         <p>
-          Únicamente para responder tus preguntas sobre los documentos que subes durante
-          tu sesión. No usamos tu información para ningún otro fin.
+          Únicamente para responder tus preguntas sobre los documentos que subes. No
+          usamos tu información para ningún otro fin.
+        </p>
+
+        <h2>2.1. Cuentas (opcional)</h2>
+        <p>
+          Si creas una cuenta, guardamos tu <strong>correo</strong> y tu contraseña
+          (cifrada, nunca en texto plano). Tus documentos quedan asociados a tu cuenta y
+          se conservan de forma <strong>persistente hasta que tú los elimines o elimines
+          tu cuenta</strong>. Sin cuenta, todo funciona en modo demo anónimo (efímero).
+          Solo tú puedes consultar los documentos de tu cuenta.
         </p>
 
         <h2>3. Eliminación automática y aislamiento</h2>

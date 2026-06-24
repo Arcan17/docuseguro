@@ -171,6 +171,17 @@ def _sync_delete(doc_id: str) -> None:
     col.delete(where={"doc_id": doc_id})
 
 
+async def delete_by_owner(owner: str) -> None:
+    """Delete every chunk owned by `owner` (e.g. 'user:42'). Used on account deletion."""
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(_executor, _sync_delete_by_owner, owner)
+
+
+def _sync_delete_by_owner(owner: str) -> None:
+    col = _get_collection()
+    col.delete(where={"session_id": owner})
+
+
 async def delete_expired_uploads(ttl_seconds: int) -> None:
     """Delete user-uploaded chunks older than `ttl_seconds`.
 

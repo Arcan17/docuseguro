@@ -86,8 +86,13 @@ class RAGPipeline:
         self._llm = _get_llm()
         self._scrubber = _get_scrubber()
 
-    async def query(self, session_id: str, query_text: str) -> QueryResult:
+    async def query(
+        self, session_id: str, query_text: str, owner: str | None = None
+    ) -> QueryResult:
         t0 = time.monotonic()
+        # `owner` scopes retrieval (account or anonymous session). Defaults to the
+        # session_id to preserve the previous anonymous-only behaviour.
+        search_owner = owner if owner is not None else session_id
 
         # Step 1: Strip PII from query before touching external services
         clean_query, token_map, pii_types = self._scrubber.scrub(query_text)
@@ -101,8 +106,8 @@ class RAGPipeline:
         query_embedding = await embed_query(clean_query)
 
         # Step 3: Retrieve chunks with cosine similarity threshold.
-        # Scoped to this session: demo docs + only this user's own uploads.
-        chunks = await search(query_embedding, n_results=5, session_id=session_id)
+        # Scoped to this owner: demo docs + only this owner's own uploads.
+        chunks = await search(query_embedding, n_results=5, session_id=search_owner)
 
         if not chunks:
             latency = int((time.monotonic() - t0) * 1000)

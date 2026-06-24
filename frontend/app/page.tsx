@@ -10,6 +10,7 @@ import {
   type IngestResponse,
   type QueryResponse,
 } from "../lib/api";
+import { getEmail, logout } from "../lib/auth";
 
 const EXAMPLES = [
   "¿Cuántos días de vacaciones tienen los empleados?",
@@ -27,6 +28,7 @@ function uuid(): string {
 export default function Home() {
   const [provider, setProvider] = useState<string | null>(null);
   const [online, setOnline] = useState<boolean>(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const [sessionId] = useState<string>(uuid);
   const [file, setFile] = useState<File | null>(null);
@@ -48,7 +50,13 @@ export default function Home() {
         setProvider(h.provider);
       })
       .catch(() => setOnline(false));
+    setUserEmail(getEmail());
   }, []);
+
+  function onLogout() {
+    logout();
+    setUserEmail(null);
+  }
 
   async function handleFile(f: File | null) {
     if (!f) return;
@@ -86,6 +94,25 @@ export default function Home() {
 
   return (
     <main className="wrap">
+      <div className="sessionbar">
+        {userEmail ? (
+          <>
+            <span className="hint">{userEmail}</span>
+            <button className="chip" onClick={onLogout}>
+              Cerrar sesión
+            </button>
+          </>
+        ) : (
+          <>
+            <Link href="/login" className="chip">
+              Iniciar sesión
+            </Link>
+            <Link href="/registro" className="chip">
+              Crear cuenta
+            </Link>
+          </>
+        )}
+      </div>
       <section className="hero">
         <span className="badge-live">
           <span className={online ? "dot ok" : "dot"} />
