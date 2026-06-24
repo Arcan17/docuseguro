@@ -236,6 +236,10 @@ export default function Home() {
               ))}
             </details>
           )}
+          <div className="hint" style={{ marginTop: 16, fontSize: 12.5 }}>
+            ⚠️ Respuesta generada por IA. Puede contener errores; no constituye
+            asesoría legal ni profesional.
+          </div>
         </div>
       )}
 
@@ -248,6 +252,10 @@ export default function Home() {
         <br />
         <Link href="/privacidad" className="legal-link">
           Aviso de privacidad
+        </Link>{" "}
+        ·{" "}
+        <Link href="/terminos" className="legal-link">
+          Términos y condiciones
         </Link>
       </div>
     </main>

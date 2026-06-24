@@ -120,8 +120,11 @@ async def ingest_document(
     except Exception as exc:
         doc.status = "error"
         await db.commit()
+        # Log the detail server-side; return a generic message (no internals to the user).
         logger.error("ingest_failed", filename=filename, error=str(exc))
-        raise HTTPException(status_code=500, detail=f"Ingestion failed: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail="No se pudo procesar el archivo. Inténtalo de nuevo."
+        ) from exc
 
     return IngestResponse(
         doc_id=doc.id,
