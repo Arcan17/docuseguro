@@ -271,7 +271,7 @@ class RAGPipeline:
         from app.models.query_log import QueryLog  # noqa: PLC0415
 
         sid = self._parse_uuid(session_id)
-        secret = (settings.audit_hash_secret or "privrag-default").encode()
+        secret = settings.effective_audit_secret.encode()
         log = QueryLog(
             session_id=sid,
             query_hash=hmac.new(secret, query_text.encode(), hashlib.sha256).hexdigest(),

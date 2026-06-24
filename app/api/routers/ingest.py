@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas.ingest import IngestResponse
 from app.core.auth import require_api_key
+from app.core.rate_limit import rate_limit
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.models.database import get_db
@@ -24,7 +25,11 @@ router = APIRouter(prefix="/ingest", tags=["ingest"])
 ALLOWED_EXTENSIONS = {".pdf", ".txt"}
 
 
-@router.post("", response_model=IngestResponse, dependencies=[Depends(require_api_key)])
+@router.post(
+    "",
+    response_model=IngestResponse,
+    dependencies=[Depends(rate_limit), Depends(require_api_key)],
+)
 async def ingest_document(
     file: UploadFile,
     session_id: str = Form(default=""),
