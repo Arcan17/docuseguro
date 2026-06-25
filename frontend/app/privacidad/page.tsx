@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Aviso de Privacidad — PrivRAG",
+  title: "Aviso de Privacidad — DocuSeguro",
   description:
-    "Cómo PrivRAG trata la información, inspirado en buenas prácticas de protección de datos personales.",
+    "Cómo DocuSeguro trata la información, inspirado en buenas prácticas de protección de datos personales.",
 };
 
 export default function Privacidad() {
@@ -21,7 +21,7 @@ export default function Privacidad() {
 
       <div className="legal">
         <p>
-          PrivRAG es una herramienta de demostración que permite consultar documentos
+          DocuSeguro es una herramienta de demostración que permite consultar documentos
           en lenguaje natural protegiendo los datos personales. Este aviso explica cómo
           tratamos la información, inspirado en buenas prácticas de protección de datos.
           (En Chile, la Ley N° 21.719 sobre protección de datos personales se informa con

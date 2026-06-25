@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Términos y Condiciones — PrivRAG",
-  description: "Términos y condiciones de uso de PrivRAG (borrador).",
+  title: "Términos y Condiciones — DocuSeguro",
+  description: "Términos y condiciones de uso de DocuSeguro (borrador).",
 };
 
 export default function Terminos() {
@@ -35,9 +35,9 @@ export default function Terminos() {
       </div>
 
       <div className="legal">
-        <h2>1. Qué es PrivRAG</h2>
+        <h2>1. Qué es DocuSeguro</h2>
         <p>
-          PrivRAG es una herramienta de demostración que permite consultar documentos en
+          DocuSeguro es una herramienta de demostración que permite consultar documentos en
           lenguaje natural, eliminando datos personales antes de procesarlos con un modelo
           de inteligencia artificial. Al usar la aplicación aceptas estos términos.
         </p>
@@ -70,7 +70,7 @@ export default function Terminos() {
 
         <h2>5. Propiedad intelectual</h2>
         <p>
-          El software y la marca PrivRAG pertenecen a su autor. El contenido que subes
+          El software y la marca DocuSeguro pertenecen a su autor. El contenido que subes
           sigue siendo tuyo; solo lo procesamos para responder tus consultas durante tu
           sesión, según el{" "}
           <Link href="/privacidad" style={{ color: "var(--accent)" }}>
