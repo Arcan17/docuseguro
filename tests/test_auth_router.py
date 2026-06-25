@@ -82,3 +82,13 @@ async def test_login_unknown_email_is_generic(client: AsyncClient) -> None:
 async def test_me_without_token_is_401(client: AsyncClient) -> None:
     resp = await client.get("/auth/me")
     assert resp.status_code == 401
+
+
+async def test_account_lockout_after_repeated_failures(client: AsyncClient) -> None:
+    await client.post("/auth/register", json={"email": "lock@b.cl", "password": "secret12"})
+    # 5 intentos fallidos permitidos, el 6º queda bloqueado (429).
+    for _ in range(5):
+        r = await client.post("/auth/login", json={"email": "lock@b.cl", "password": "mala1234"})
+        assert r.status_code == 401
+    blocked = await client.post("/auth/login", json={"email": "lock@b.cl", "password": "mala1234"})
+    assert blocked.status_code == 429

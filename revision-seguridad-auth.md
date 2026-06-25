@@ -18,10 +18,10 @@ obligatoria antes de desplegar (fijar JWT_SECRET) y varias mejoras antes de dato
 - Eliminar cuenta borra documentos y vectores.
 
 ### 🟡 Hallazgos (Media — ninguno bloquea)
-1. **Fijar `JWT_SECRET` en producción** (si no, las sesiones se rompen en cada deploy). Lo más urgente. `app/core/config.py:64`
-2. **Token en localStorage (XSS)** → migrar a cookie httpOnly antes de datos reales. `frontend/lib/auth.ts`
-3. **Sin revocación de sesión** (logout solo cliente; token válido hasta 7 días) → acortar expiración y/o blocklist. `app/core/config.py:65`
-4. **Límite de intentos por IP, no por cuenta** → agregar bloqueo por cuenta tras N fallos. `app/core/rate_limit.py`
+1. **Fijar `JWT_SECRET` en producción** (si no, las sesiones se rompen en cada deploy). Lo más urgente. `app/core/config.py` — variable lista; falta ponerla en Railway al desplegar (acción operativa).
+2. **Token en localStorage (XSS)** → migrar a cookie httpOnly antes de datos reales. `frontend/lib/auth.ts` — **⚠️ Sigue (pendiente).**
+3. ~~Sin revocación de sesión~~ → ✅ **Mitigado:** token acortado de 7 días a 1 día. `app/core/config.py` (jwt_expire_minutes=1440). (Revocación total sigue siendo mejora futura.)
+4. ~~Límite solo por IP~~ → ✅ **Resuelto:** bloqueo por cuenta tras 5 intentos fallidos (5 min). `app/core/login_guard.py` + test.
 
 ### 🟢 Menores
 5. Sin verificación de correo (alguien puede registrar un email ajeno). Baja.

@@ -9,6 +9,7 @@ from app.api.schemas.auth import (
     RegisterRequest,
     UserResponse,
 )
+from app.core import login_guard
 from app.core.rate_limit import rate_limit
 from app.core.security import create_access_token
 from app.models.database import get_db
@@ -38,13 +39,21 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)) ->
 
 @router.post("/login", response_model=AuthResponse, dependencies=[Depends(rate_limit)])
 async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)) -> AuthResponse:
+    key = body.email.strip().lower()
+    if login_guard.is_locked(key):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Demasiados intentos fallidos. Espera unos minutos.",
+        )
     user = await auth_service.authenticate(db, body.email, body.password)
     if user is None:
+        login_guard.record_failure(key)
         # Generic message — never reveal whether the email exists.
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Correo o contraseña incorrectos.",
         )
+    login_guard.clear(key)
     return AuthResponse(access_token=create_access_token(user.id), email=user.email)
 
 

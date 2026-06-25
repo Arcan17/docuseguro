@@ -62,8 +62,12 @@ class Settings(BaseSettings):
 
     # Auth (Fase 1 — cuentas)
     jwt_secret: str = ""  # signing key for JWT; random per-process if empty
-    jwt_expire_minutes: int = 10080  # 7 days
+    # Shorter expiry limits the window if a token is stolen (no revocation yet).
+    jwt_expire_minutes: int = 1440  # 1 day
     password_min_length: int = 8
+    # Per-account login lockout (brute force): max failures before a cooldown.
+    login_max_failures: int = 5
+    login_lockout_seconds: int = 300
 
     @property
     def auth_enabled(self) -> bool:

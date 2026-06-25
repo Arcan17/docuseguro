@@ -8,12 +8,14 @@ from app.models.base import Base
 def _disable_rate_limit():
     """Rate limiting is per-IP in-memory; all tests share one client IP, so it
     would trip spuriously. Disable it during tests (it's verified separately)."""
+    from app.core import login_guard as lg
     from app.core import rate_limit as rl
     from app.core.config import settings
 
     old = settings.rate_limit_per_minute
     settings.rate_limit_per_minute = 0
     rl._hits.clear()
+    lg._failures.clear()
     yield
     settings.rate_limit_per_minute = old
 
