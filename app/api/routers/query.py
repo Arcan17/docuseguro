@@ -1,6 +1,8 @@
 import hashlib
+import json
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_optional_user
@@ -13,6 +15,32 @@ from app.models.user import User
 from app.services.rag_pipeline import RAGPipeline
 
 router = APIRouter(prefix="/query", tags=["query"])
+
+
+@router.post(
+    "/stream",
+    dependencies=[Depends(rate_limit), Depends(require_api_key)],
+)
+async def query_stream(
+    request: QueryRequest,
+    user: User | None = Depends(get_optional_user),
+    db: AsyncSession = Depends(get_db),
+) -> StreamingResponse:
+    ensure_trial_active(user)
+    owner = f"user:{user.id}" if user is not None else request.session_id
+    pipeline = RAGPipeline(db)
+
+    async def event_stream():
+        async for event in pipeline.query_stream(
+            session_id=request.session_id, query_text=request.query, owner=owner
+        ):
+            yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.post(

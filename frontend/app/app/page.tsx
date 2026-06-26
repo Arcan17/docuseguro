@@ -6,7 +6,7 @@ import {
   API_BASE,
   health,
   ingest,
-  query,
+  queryStream,
   type IngestResponse,
   type QueryResponse,
 } from "../../lib/api";
@@ -40,6 +40,7 @@ export default function DemoApp() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [res, setRes] = useState<QueryResponse | null>(null);
+  const [streamText, setStreamText] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const fileInput = useRef<HTMLInputElement>(null);
@@ -86,11 +87,26 @@ export default function DemoApp() {
     setLoading(true);
     setError(null);
     setRes(null);
+    setStreamText("");
+    let acc = "";
     try {
-      const r = await query(value, sessionId);
-      setRes(r);
+      await queryStream(value, sessionId, {
+        onDelta: (t) => {
+          acc += t;
+          setStreamText(acc);
+        },
+        onDone: (meta) => {
+          setRes({
+            answer: acc,
+            session_id: sessionId,
+            ...meta,
+          } as QueryResponse);
+          setStreamText("");
+        },
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error en la consulta");
+      setStreamText("");
     } finally {
       setLoading(false);
     }
@@ -246,6 +262,19 @@ export default function DemoApp() {
         </div>
         {error && <div className="error">⚠ {error}</div>}
       </div>
+
+      {/* Respuesta en vivo (streaming) */}
+      {streamText && !res && (
+        <div className="card">
+          <h2>
+            <span className="step">3</span>Respuesta
+          </h2>
+          <div className="answer">
+            {streamText}
+            <span className="stream-caret" />
+          </div>
+        </div>
+      )}
 
       {/* Paso 3 — respuesta */}
       {res && (

@@ -55,6 +55,57 @@ async function parseError(res: Response): Promise<string> {
   }
 }
 
+export interface StreamHandlers {
+  onDelta: (text: string) => void;
+  onDone: (meta: Partial<QueryResponse>) => void;
+}
+
+// Streams the answer token-by-token over SSE. Falls back to the caller's
+// onError via a thrown error.
+export async function queryStream(
+  q: string,
+  sessionId: string,
+  handlers: StreamHandlers
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/query/stream`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ query: q, session_id: sessionId }),
+  });
+  if (!res.ok || !res.body) throw new Error(await parseError(res));
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const events = buffer.split("\n\n");
+    buffer = events.pop() ?? "";
+    for (const evt of events) {
+      const line = evt.trim();
+      if (!line.startsWith("data:")) continue;
+      const payload = JSON.parse(line.slice(5).trim());
+      if (payload.type === "delta") {
+        handlers.onDelta(payload.text);
+      } else if (payload.type === "done") {
+        handlers.onDone({
+          cache_hit: payload.cache_hit,
+          latency_ms: payload.latency_ms,
+          chunk_count: payload.chunk_count,
+          pii_found: payload.pii_found,
+          pii_types: payload.pii_types,
+          llm_provider: payload.provider,
+          source_chunks: payload.source_chunks,
+          tokens_saved_pct: null,
+        });
+      }
+    }
+  }
+}
+
 export async function query(
   q: string,
   sessionId: string
