@@ -30,9 +30,14 @@ async def query_stream(
     owner = f"user:{user.id}" if user is not None else request.session_id
     pipeline = RAGPipeline(db)
 
+    history = [{"role": t.role, "content": t.content} for t in request.history]
+
     async def event_stream():
         async for event in pipeline.query_stream(
-            session_id=request.session_id, query_text=request.query, owner=owner
+            session_id=request.session_id,
+            query_text=request.query,
+            owner=owner,
+            history=history,
         ):
             yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
 

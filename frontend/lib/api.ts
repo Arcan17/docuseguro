@@ -60,17 +60,23 @@ export interface StreamHandlers {
   onDone: (meta: Partial<QueryResponse>) => void;
 }
 
+export interface Turn {
+  role: "user" | "assistant";
+  content: string;
+}
+
 // Streams the answer token-by-token over SSE. Falls back to the caller's
-// onError via a thrown error.
+// onError via a thrown error. `history` carries prior turns for follow-ups.
 export async function queryStream(
   q: string,
   sessionId: string,
-  handlers: StreamHandlers
+  handlers: StreamHandlers,
+  history: Turn[] = []
 ): Promise<void> {
   const res = await fetch(`${API_BASE}/query/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders() },
-    body: JSON.stringify({ query: q, session_id: sessionId }),
+    body: JSON.stringify({ query: q, session_id: sessionId, history }),
   });
   if (!res.ok || !res.body) throw new Error(await parseError(res));
 

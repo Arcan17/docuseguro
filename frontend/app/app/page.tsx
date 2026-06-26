@@ -88,6 +88,7 @@ export default function DemoApp() {
   const [res, setRes] = useState<QueryResponse | null>(null);
   const [streamText, setStreamText] = useState("");
   const [lastQuery, setLastQuery] = useState("");
+  const [turns, setTurns] = useState<{ q: string; answer: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const fileInput = useRef<HTMLInputElement>(null);
@@ -131,6 +132,18 @@ export default function DemoApp() {
     const value = (text ?? q).trim();
     if (!value) return;
     if (text) setQ(text);
+
+    // Move the previous answer into the conversation thread before asking again.
+    const priorTurns = [...turns];
+    if (res && lastQuery) {
+      priorTurns.push({ q: lastQuery, answer: res.answer });
+      setTurns(priorTurns);
+    }
+    const history = priorTurns.flatMap((t) => [
+      { role: "user" as const, content: t.q },
+      { role: "assistant" as const, content: t.answer },
+    ]);
+
     setLoading(true);
     setError(null);
     setRes(null);
@@ -138,26 +151,40 @@ export default function DemoApp() {
     setLastQuery(value);
     let acc = "";
     try {
-      await queryStream(value, sessionId, {
-        onDelta: (t) => {
-          acc += t;
-          setStreamText(acc);
+      await queryStream(
+        value,
+        sessionId,
+        {
+          onDelta: (t) => {
+            acc += t;
+            setStreamText(acc);
+          },
+          onDone: (meta) => {
+            setRes({
+              answer: acc,
+              session_id: sessionId,
+              ...meta,
+            } as QueryResponse);
+            setStreamText("");
+          },
         },
-        onDone: (meta) => {
-          setRes({
-            answer: acc,
-            session_id: sessionId,
-            ...meta,
-          } as QueryResponse);
-          setStreamText("");
-        },
-      });
+        history
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error en la consulta");
       setStreamText("");
     } finally {
       setLoading(false);
     }
+  }
+
+  function newConversation() {
+    setTurns([]);
+    setRes(null);
+    setStreamText("");
+    setLastQuery("");
+    setQ("");
+    setError(null);
   }
 
   return (
@@ -278,10 +305,29 @@ export default function DemoApp() {
         )}
       </div>
 
+      {/* Hilo de conversación (turnos previos) */}
+      {turns.length > 0 && (
+        <div className="card convo">
+          <div className="convo-head">
+            <h2 style={{ margin: 0 }}>Conversación</h2>
+            <button className="chip" onClick={newConversation}>
+              Nueva conversación
+            </button>
+          </div>
+          {turns.map((t, i) => (
+            <div className="turn" key={i}>
+              <div className="turn-q">{t.q}</div>
+              <div className="turn-a">{t.answer}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Paso 2 — preguntar */}
       <div className="card">
         <h2>
-          <span className="step">2</span>Haz una pregunta
+          <span className="step">2</span>
+          {turns.length > 0 ? "Pregunta de seguimiento" : "Haz una pregunta"}
         </h2>
         <div className="qrow">
           <textarea

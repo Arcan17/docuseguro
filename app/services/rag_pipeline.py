@@ -246,13 +246,28 @@ class RAGPipeline:
             for c in chunks
         ]
 
-    async def query_stream(self, session_id: str, query_text: str, owner: str | None = None):
+    async def query_stream(
+        self,
+        session_id: str,
+        query_text: str,
+        owner: str | None = None,
+        history: list[dict] | None = None,
+    ):
         """Async generator que emite eventos dict: {"type":"delta"|"done", ...}.
 
         Replica el pipeline de query() pero transmite la respuesta del LLM token a
         token, restaurando PII sobre el flujo. El evento "done" lleva las métricas.
+        Si `history` trae turnos previos, los incluye (sin PII) para seguimientos.
         """
         t0 = time.monotonic()
+        history = history[-6:] if history else []
+        # Scrub prior turns too — PII must not reach the LLM via the history.
+        history_lines: list[str] = []
+        for turn in history:
+            clean_turn, _, _ = self._scrubber.scrub(str(turn.get("content", "")))
+            speaker = "Usuario" if turn.get("role") == "user" else "Asistente"
+            history_lines.append(f"{speaker}: {clean_turn}")
+        history_block = "\n".join(history_lines)
         search_owner = owner if owner is not None else session_id
         user_id = (
             int(owner.split(":", 1)[1])
@@ -286,7 +301,8 @@ class RAGPipeline:
         context_str = "\n".join(c.text for c in sorted_chunks)
         cache_key = make_cache_key(clean_query, context_str)
 
-        cached = await self._cache.get(cache_key)
+        # Follow-ups depend on the conversation, so they bypass the answer cache.
+        cached = None if history else await self._cache.get(cache_key)
         if cached is not None:
             yield {"type": "delta", "text": restore(cached, token_map)}
             latency = int((time.monotonic() - t0) * 1000)
@@ -303,7 +319,8 @@ class RAGPipeline:
             return
 
         compressed, original_tokens, compressed_tokens = compress_context(sorted_chunks)
-        user_prompt = f"Context:\n{compressed}\n\nQuestion: {clean_query}"
+        convo = f"Conversación previa:\n{history_block}\n\n" if history_block else ""
+        user_prompt = f"{convo}Context:\n{compressed}\n\nQuestion: {clean_query}"
 
         restorer = StreamingRestorer(token_map)
         raw_parts: list[str] = []

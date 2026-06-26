@@ -244,6 +244,43 @@ button.primary:disabled {
   line-height: 1.6;
   white-space: pre-wrap;
 }
+.convo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.convo-head h2 {
+  font-size: 18px;
+}
+.turn {
+  border-top: 1px solid var(--border);
+  padding: 14px 0;
+}
+.turn:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+.turn-q {
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.turn-q::before {
+  content: "Tú · ";
+  color: var(--accent);
+  font-weight: 700;
+}
+.turn-a {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  white-space: pre-wrap;
+  padding-left: 12px;
+  border-left: 2px solid var(--border);
+}
 .stream-caret {
   display: inline-block;
   width: 8px;
