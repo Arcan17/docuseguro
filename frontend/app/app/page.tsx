@@ -25,6 +25,52 @@ function uuid(): string {
   return "00000000-0000-0000-0000-" + Date.now().toString().padStart(12, "0");
 }
 
+const STOPWORDS = new Set([
+  "para",
+  "como",
+  "cual",
+  "cuál",
+  "cuanto",
+  "cuánto",
+  "donde",
+  "dónde",
+  "porque",
+  "sobre",
+  "este",
+  "esta",
+  "esto",
+  "tiene",
+  "tienen",
+  "según",
+  "segun",
+]);
+
+// Resalta los términos de la pregunta (≥4 letras, sin stopwords) en un pasaje.
+function highlightTerms(text: string, query: string): React.ReactNode {
+  const terms = Array.from(
+    new Set(
+      query
+        .toLowerCase()
+        .split(/[^a-záéíóúñü0-9]+/i)
+        .filter((w) => w.length >= 4 && !STOPWORDS.has(w))
+    )
+  );
+  if (terms.length === 0) return text;
+  const termSet = new Set(terms);
+  const escaped = terms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const re = new RegExp(`(${escaped.join("|")})`, "gi");
+  const parts = text.split(re);
+  return parts.map((part, i) =>
+    termSet.has(part.toLowerCase()) ? (
+      <mark className="cite-hl" key={i}>
+        {part}
+      </mark>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+}
+
 export default function DemoApp() {
   const [provider, setProvider] = useState<string | null>(null);
   const [online, setOnline] = useState<boolean>(false);
@@ -41,6 +87,7 @@ export default function DemoApp() {
   const [loading, setLoading] = useState(false);
   const [res, setRes] = useState<QueryResponse | null>(null);
   const [streamText, setStreamText] = useState("");
+  const [lastQuery, setLastQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const fileInput = useRef<HTMLInputElement>(null);
@@ -88,6 +135,7 @@ export default function DemoApp() {
     setError(null);
     setRes(null);
     setStreamText("");
+    setLastQuery(value);
     let acc = "";
     try {
       await queryStream(value, sessionId, {
@@ -310,12 +358,26 @@ export default function DemoApp() {
           {res.source_chunks.length > 0 && (
             <details className="sources">
               <summary>
-                Ver fuentes recuperadas ({res.source_chunks.length})
+                Ver fuentes citadas ({res.source_chunks.length}) — de dónde salió
+                la respuesta
               </summary>
-              {res.source_chunks.map((c) => (
+              {res.source_chunks.map((c, i) => (
                 <div className="source" key={c.chunk_id}>
-                  <span className="sim">{(c.similarity * 100).toFixed(1)}%</span>{" "}
-                  de coincidencia · {c.text_preview}
+                  <div className="source-head">
+                    <span className="cite-num">{i + 1}</span>
+                    <div className="relbar" title="Relevancia">
+                      <span
+                        className="relbar-fill"
+                        style={{ width: `${Math.round(c.similarity * 100)}%` }}
+                      />
+                    </div>
+                    <span className="sim">
+                      {(c.similarity * 100).toFixed(0)}% relevante
+                    </span>
+                  </div>
+                  <div className="source-text">
+                    {highlightTerms(c.text_preview, lastQuery)}
+                  </div>
                 </div>
               ))}
             </details>

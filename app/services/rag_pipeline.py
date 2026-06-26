@@ -240,7 +240,8 @@ class RAGPipeline:
                 "chunk_id": c.chunk_id,
                 "doc_id": c.doc_id,
                 "similarity": round(c.similarity, 4),
-                "text_preview": c.text[:120] + "..." if len(c.text) > 120 else c.text,
+                # Longer preview so the highlighted passage keeps context.
+                "text_preview": c.text[:400] + "…" if len(c.text) > 400 else c.text,
             }
             for c in chunks
         ]

@@ -307,6 +307,50 @@ button.primary:disabled {
   color: var(--accent);
   font-weight: 600;
 }
+.source-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.cite-num {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: var(--navy);
+  color: #f7f3e8;
+  font-size: 11px;
+  font-weight: 700;
+}
+.relbar {
+  flex: 1;
+  height: 6px;
+  background: var(--panel-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.relbar-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--gold-bright));
+  border-radius: 999px;
+}
+.source-text {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.cite-hl {
+  background: rgba(156, 115, 34, 0.22);
+  color: var(--text);
+  border-radius: 3px;
+  padding: 0 2px;
+  font-weight: 600;
+}
 
 .error {
   color: var(--red);
