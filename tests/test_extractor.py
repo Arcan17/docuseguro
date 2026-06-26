@@ -7,7 +7,7 @@ from app.services.ingestion.extractor import extract_text
 
 
 def test_extract_txt() -> None:
-    text = extract_text("Hola mundo".encode(), "nota.txt")
+    text = extract_text(b"Hola mundo", "nota.txt")
     assert text == "Hola mundo"
 
 
