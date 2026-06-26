@@ -1,10 +1,11 @@
-# PrivRAG
+# DocuSeguro
 
 > Privacy-preserving RAG pipeline for enterprise documents
+> <sub>(formerly **PrivRAG** — repo and live URLs keep the original name)</sub>
 
 **🌐 [Try the live web app](https://privrag.vercel.app)** · **[API demo (Swagger)](https://privrag-production.up.railway.app/docs)** · [Health check](https://privrag-production.up.railway.app/health)
 
-> Upload a document, ask a question in plain language, and watch PrivRAG strip
+> Upload a document, ask a question in plain language, and watch DocuSeguro strip
 > RUTs / emails / phones **before** anything reaches the LLM. No signup required.
 
 [![CI](https://github.com/Arcan17/privrag/actions/workflows/ci.yml/badge.svg)](https://github.com/Arcan17/privrag/actions/workflows/ci.yml)
@@ -13,9 +14,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14-000000.svg?logo=next.js)](https://nextjs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-![PrivRAG web app — ask a question, PII masked before the LLM, cited sources](assets/web-ui.svg)
-
-> The screenshot above mirrors the live UI. For a real capture of the running app, see [privrag.vercel.app](https://privrag.vercel.app).
+![DocuSeguro — landing page](assets/screens/landing.png)
 
 A production-ready RAG application that lets companies query their internal documents in natural language — **without ever sending sensitive data to an external LLM**. Ships with a FastAPI backend and a Next.js web app, both deployed live.
 
@@ -27,6 +26,37 @@ Built to demonstrate four enterprise AI engineering capabilities:
 | **Token optimization** | SHA256 cache (PostgreSQL) + sentence compression | 30-45% cache hit rate, ~15% tokens saved |
 | **PII stripping** | Regex (Chilean RUT / email / phone) + optional spaCy | 100% RUT & email detection |
 | **Workflow automation** | Telegram Bot + simulated CRM webhook + `/metrics` | Non-blocking async notifications |
+
+### Also included
+
+- **User accounts** — email/password auth (bcrypt + JWT), per-account document isolation, per-account login lockout.
+- **14-day free trial** — derived from `created_at`; uploads/queries return `402` when expired. User **dashboard** with usage stats.
+- **Streaming answers** — token-by-token over SSE, with a PII restorer that rebuilds `[uuid]` tokens **split across stream chunks**.
+- **Explainable citations** — retrieved passages numbered, relevance-scored, with the question's terms highlighted in-context.
+- **Word (.docx) support** — extracts paragraphs and tables.
+- **Evaluation harness** — `evals/` measures the PII scrubber's precision / recall / F1 against a labeled dataset (offline, CI-gated). Because measuring an AI system — not just running it — is what makes it production-grade.
+
+---
+
+## Screenshots
+
+**Ask a question — PII masked before the LLM, with cited sources**
+
+![Answer with masked PII and explainable citations](assets/screens/app-answer.png)
+
+The chip `🔒 Datos privados ocultados: email, rut` confirms the RUT and email were
+replaced with tokens **before** the LLM call. The answer shows them restored (for the
+user only); the cited source passages still show the `[uuid]` tokens — proof the model
+never saw the real values. Each source has a relevance bar and the question's terms
+highlighted.
+
+**Multi-turn conversation — follow-ups keep context**
+
+![Conversation thread with a follow-up question](assets/screens/conversation.png)
+
+**User dashboard — trial status and usage**
+
+![User dashboard](assets/screens/dashboard.png)
 
 ---
 
@@ -134,6 +164,33 @@ Especially relevant for companies handling regulated data:
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    U["Usuario"] -->|HTTPS| FE["Next.js web app"]
+    FE -->|"REST / SSE"| API["FastAPI backend"]
+
+    subgraph Backend
+        API --> AUTH["Auth JWT + trial 14d"]
+        API --> SCRUB["PII Scrubber<br/>RUT · correo · teléfono"]
+        SCRUB --> EMB["fastembed local ONNX<br/>sin API key"]
+        EMB --> VS[("ChromaDB<br/>cosine search")]
+        VS --> CACHE{"Cache<br/>SHA256"}
+        CACHE -->|miss| LLM["Groq LLM<br/>streaming"]
+        CACHE -->|hit| OUT
+        LLM --> REST["PII restore<br/>sobre el stream"]
+        REST --> OUT["Respuesta + citas"]
+    end
+
+    SCRUB -. "nunca sale PII" .-> LLM
+    API --> PG[("PostgreSQL<br/>users · docs · logs")]
+
+    style SCRUB fill:#9c7322,color:#fff
+    style LLM fill:#1a2a47,color:#fff
+```
+
+> El **PII Scrubber** es la frontera clave: ningún RUT, correo o teléfono cruza
+> hacia el LLM. Se restaura solo en la respuesta, en memoria, dentro del request.
+
 ```
 Next.js web app (Vercel)  ──HTTPS / CORS──▶  FastAPI backend (Railway)
 
@@ -230,7 +287,10 @@ All endpoints except `/health` and `/metrics` require the `X-API-Key` header whe
 ```bash
 pip install -r requirements.txt aiosqlite
 pytest -v --tb=short
-# 61 passed
+# 90 passed
+
+# Run the PII evaluation harness (offline — precision/recall/F1)
+python -m evals.run_pii_eval
 ```
 
 ---

@@ -1,8 +1,8 @@
-# PrivRAG — Architecture
+# DocuSeguro — Architecture
 
 ## Overview
 
-PrivRAG is a privacy-preserving Retrieval-Augmented Generation (RAG) pipeline for enterprise documents. It demonstrates four production-grade AI engineering capabilities in a single, deployable system.
+DocuSeguro is a privacy-preserving Retrieval-Augmented Generation (RAG) pipeline for enterprise documents. It demonstrates four production-grade AI engineering capabilities in a single, deployable system.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

@@ -1,3 +1,5 @@
+from collections.abc import AsyncIterator
+
 import anthropic
 
 from app.core.config import settings
@@ -28,3 +30,14 @@ class AnthropicClient:
         )
         content = message.content[0]
         return content.text if hasattr(content, "text") else str(content)
+
+    async def stream(self, system: str, user: str) -> AsyncIterator[str]:
+        client = _get_client()
+        async with client.messages.stream(
+            model=ANTHROPIC_MODEL,
+            max_tokens=1024,
+            system=system,
+            messages=[{"role": "user", "content": user}],
+        ) as stream:
+            async for text in stream.text_stream:
+                yield text

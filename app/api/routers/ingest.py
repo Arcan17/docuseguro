@@ -6,13 +6,16 @@ from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_optional_user
 from app.api.schemas.ingest import IngestResponse
 from app.core.auth import require_api_key
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.core.rate_limit import rate_limit
+from app.core.trial import ensure_trial_active
 from app.models.database import get_db
 from app.models.document import Document
+from app.models.user import User
 from app.services.ingestion.chunker import semantic_chunk
 from app.services.ingestion.embedder import embed_chunks
 from app.services.ingestion.extractor import extract_text
@@ -22,7 +25,7 @@ from app.services.vector_store import upsert_chunks
 logger = get_logger(__name__)
 router = APIRouter(prefix="/ingest", tags=["ingest"])
 
-ALLOWED_EXTENSIONS = {".pdf", ".txt"}
+ALLOWED_EXTENSIONS = {".pdf", ".txt", ".docx"}
 
 
 @router.post(
@@ -33,11 +36,22 @@ ALLOWED_EXTENSIONS = {".pdf", ".txt"}
 async def ingest_document(
     file: UploadFile,
     session_id: str = Form(default=""),
+    user: User | None = Depends(get_optional_user),
     db: AsyncSession = Depends(get_db),
 ) -> IngestResponse:
-    # Each upload is owned by a session so search can isolate it from other
-    # users and cleanup can expire it. No session given -> orphan (still purged).
-    owner_session = session_id or str(uuid.uuid4())
+    # Authenticated users with an expired trial cannot upload (anonymous users pass).
+    ensure_trial_active(user)
+    # Owner = the account (persistent) if authenticated, else the browser session
+    # (anonymous, ephemeral). Search isolates by this owner; cleanup only expires
+    # anonymous uploads.
+    if user is not None:
+        owner = f"user:{user.id}"
+        source = "user"
+        doc_user_id: int | None = user.id
+    else:
+        owner = session_id or str(uuid.uuid4())
+        source = "upload"
+        doc_user_id = None
     filename = file.filename or "unknown"
     ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     if ext not in ALLOWED_EXTENSIONS:
@@ -52,8 +66,14 @@ async def ingest_document(
         )
     content_hash = hashlib.sha256(content).hexdigest()
 
-    # Dedup: skip re-ingestion of identical content
-    existing = await db.scalar(select(Document).where(Document.content_hash == content_hash))
+    # Dedup scoped to the owner: skip re-ingestion of identical content the same
+    # account (or anonymous bucket) already uploaded.
+    existing = await db.scalar(
+        select(Document).where(
+            Document.content_hash == content_hash,
+            Document.user_id == doc_user_id,
+        )
+    )
     if existing:
         logger.info("ingest_skipped_duplicate", filename=filename, doc_id=existing.id)
         return IngestResponse(
@@ -68,6 +88,7 @@ async def ingest_document(
         content_hash=content_hash,
         file_size=len(content),
         status="processing",
+        user_id=doc_user_id,
     )
     db.add(doc)
     await db.flush()  # get id without committing
@@ -92,16 +113,11 @@ async def ingest_document(
 
         chunks = semantic_chunk(clean_text, doc_id=doc_id)
         embeddings = await embed_chunks(chunks)
-        await upsert_chunks(
-            doc_id,
-            chunks,
-            embeddings,
-            metadata_extra={
-                "source": "upload",
-                "session_id": owner_session,
-                "uploaded_at": time.time(),
-            },
-        )
+        meta: dict[str, object] = {"source": source, "session_id": owner}
+        if source == "upload":
+            # Only anonymous uploads carry a timestamp and are auto-expired.
+            meta["uploaded_at"] = time.time()
+        await upsert_chunks(doc_id, chunks, embeddings, metadata_extra=meta)
 
         doc.chunk_count = len(chunks)
         doc.status = "ready"

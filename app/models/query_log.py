@@ -12,6 +12,8 @@ class QueryLog(Base):
     __tablename__ = "query_log"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # Set when the query was made by an authenticated user (Fase 4 panel stats).
+    user_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
     session_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
     query_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     cache_hit: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

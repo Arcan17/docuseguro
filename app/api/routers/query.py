@@ -1,15 +1,51 @@
 import hashlib
+import json
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_optional_user
 from app.api.schemas.query import QueryRequest, QueryResponse, SourceChunk
 from app.core.auth import require_api_key
 from app.core.rate_limit import rate_limit
+from app.core.trial import ensure_trial_active
 from app.models.database import get_db
+from app.models.user import User
 from app.services.rag_pipeline import RAGPipeline
 
 router = APIRouter(prefix="/query", tags=["query"])
+
+
+@router.post(
+    "/stream",
+    dependencies=[Depends(rate_limit), Depends(require_api_key)],
+)
+async def query_stream(
+    request: QueryRequest,
+    user: User | None = Depends(get_optional_user),
+    db: AsyncSession = Depends(get_db),
+) -> StreamingResponse:
+    ensure_trial_active(user)
+    owner = f"user:{user.id}" if user is not None else request.session_id
+    pipeline = RAGPipeline(db)
+
+    history = [{"role": t.role, "content": t.content} for t in request.history]
+
+    async def event_stream():
+        async for event in pipeline.query_stream(
+            session_id=request.session_id,
+            query_text=request.query,
+            owner=owner,
+            history=history,
+        ):
+            yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.post(
@@ -19,12 +55,19 @@ router = APIRouter(prefix="/query", tags=["query"])
 )
 async def query_documents(
     request: QueryRequest,
+    user: User | None = Depends(get_optional_user),
     db: AsyncSession = Depends(get_db),
 ) -> QueryResponse:
+    # Authenticated users with an expired trial are blocked (anonymous users pass).
+    ensure_trial_active(user)
+    # Search is scoped to this owner: the account if authenticated, else the
+    # anonymous browser session.
+    owner = f"user:{user.id}" if user is not None else request.session_id
     pipeline = RAGPipeline(db)
     result = await pipeline.query(
         session_id=request.session_id,
         query_text=request.query,
+        owner=owner,
     )
 
     source_chunks = [

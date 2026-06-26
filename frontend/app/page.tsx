@@ -1,263 +1,237 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import {
-  API_BASE,
-  health,
-  ingest,
-  query,
-  type IngestResponse,
-  type QueryResponse,
-} from "../lib/api";
+import { useEffect, useState } from "react";
+import { getEmail } from "../lib/auth";
 
-const EXAMPLES = [
-  "¿Cuántos días de vacaciones tienen los empleados?",
-  "¿Cumplió el empleado con RUT 12.345.678-9 y correo ana@empresa.cl sus metas?",
-  "¿Cuál es la política de devoluciones?",
-];
-
-function uuid(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-  return "00000000-0000-0000-0000-" + Date.now().toString().padStart(12, "0");
-}
-
-export default function Home() {
-  const [provider, setProvider] = useState<string | null>(null);
-  const [online, setOnline] = useState<boolean>(false);
-
-  const [sessionId] = useState<string>(uuid);
-  const [file, setFile] = useState<File | null>(null);
-  const [ingestRes, setIngestRes] = useState<IngestResponse | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [dragging, setDragging] = useState(false);
-
-  const [q, setQ] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [res, setRes] = useState<QueryResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const fileInput = useRef<HTMLInputElement>(null);
+export default function Landing() {
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    health()
-      .then((h) => {
-        setOnline(h.status === "ok");
-        setProvider(h.provider);
-      })
-      .catch(() => setOnline(false));
+    setUserEmail(getEmail());
   }, []);
 
-  async function handleFile(f: File | null) {
-    if (!f) return;
-    setFile(f);
-    setIngestRes(null);
-    setError(null);
-    setUploading(true);
-    try {
-      const r = await ingest(f, sessionId);
-      setIngestRes(r);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al subir el archivo");
-      setFile(null);
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  async function runQuery(text?: string) {
-    const value = (text ?? q).trim();
-    if (!value) return;
-    if (text) setQ(text);
-    setLoading(true);
-    setError(null);
-    setRes(null);
-    try {
-      const r = await query(value, sessionId);
-      setRes(r);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error en la consulta");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
-    <main className="wrap">
-      <section className="hero">
-        <span className="badge-live">
-          <span className={online ? "dot ok" : "dot"} />
-          {online ? `API en línea · ${provider}` : "Conectando con la API…"}
-        </span>
-        <h1>
-          Pregúntale lo que sea a tus documentos.
-          <br />
-          <span className="grad">Sin filtrar datos sensibles.</span>
-        </h1>
-        <p>
-          DocuSeguro borra los datos privados (RUT, correos, teléfonos){" "}
-          <strong>antes</strong> de que cualquier texto llegue a un LLM externo.
-          Sube un documento, pregunta en lenguaje natural y mira exactamente qué
-          se mantuvo privado.
-        </p>
+    <div className="lp">
+      {/* ---------- NAV ---------- */}
+      <nav className="lp-nav">
+        <Link href="/" className="brand">
+          Docu<span className="brand-accent">Seguro</span>
+        </Link>
+        <div className="lp-nav-links">
+          <a href="#como-funciona">Cómo funciona</a>
+          <a href="#rubros">Para quién</a>
+          <a href="#privacidad">Privacidad</a>
+          {userEmail ? (
+            <Link href="/dashboard" className="lp-btn lp-btn-soft">
+              Mi panel
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="lp-nav-login">
+                Iniciar sesión
+              </Link>
+              <Link href="/registro" className="lp-btn lp-btn-soft">
+                Crear cuenta
+              </Link>
+            </>
+          )}
+        </div>
+      </nav>
+
+      {/* ---------- HERO ---------- */}
+      <header className="lp-hero">
+        <div className="lp-hero-text">
+          <span className="lp-eyebrow">
+            Inteligencia artificial · con tus datos protegidos
+          </span>
+          <h1>
+            Conversa con tus documentos.
+            <br />
+            <span className="grad">Sin exponer datos privados.</span>
+          </h1>
+          <p>
+            Sube un contrato, una póliza o un balance y pregúntale en lenguaje
+            normal. DocuSeguro borra automáticamente los RUT, correos y teléfonos{" "}
+            <strong>antes</strong> de que el texto llegue a la inteligencia
+            artificial.
+          </p>
+          <div className="lp-hero-cta">
+            <Link href="/registro" className="lp-btn lp-btn-primary">
+              Empieza gratis — 14 días
+            </Link>
+            <Link href="/app" className="lp-btn lp-btn-ghost">
+              Probar la demo →
+            </Link>
+          </div>
+          <div className="lp-hero-note">
+            Sin tarjeta de crédito · sin instalar nada · pruébalo en 1 minuto
+          </div>
+        </div>
+
+        {/* Visual: antes / después del borrado de datos */}
+        <div className="lp-hero-visual" aria-hidden="true">
+          <div className="lp-doc">
+            <div className="lp-doc-label">Contrato_arriendo.pdf</div>
+            <div className="lp-doc-line">
+              Arrendatario: Juan Pérez Soto
+            </div>
+            <div className="lp-doc-line">
+              RUT: <span className="lp-redact">██.███.███-█</span>
+            </div>
+            <div className="lp-doc-line">
+              Correo: <span className="lp-redact">████████@████.cl</span>
+            </div>
+            <div className="lp-doc-line">
+              Teléfono: <span className="lp-redact">+56 9 ████ ████</span>
+            </div>
+            <div className="lp-doc-line lp-doc-dim">
+              Renta mensual: $650.000 — reajuste anual IPC…
+            </div>
+            <div className="lp-doc-shield">🔒 Datos privados ocultados</div>
+          </div>
+          <div className="lp-chat">
+            <div className="lp-chat-q">
+              ¿Cuál es la renta y cada cuánto se reajusta?
+            </div>
+            <div className="lp-chat-a">
+              La renta mensual es de $650.000 y se reajusta una vez al año según
+              el IPC.
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* ---------- CÓMO FUNCIONA ---------- */}
+      <section id="como-funciona" className="lp-section">
+        <h2 className="lp-h2">Tres pasos. Cero filtraciones.</h2>
+        <div className="lp-steps">
+          <div className="lp-step-card">
+            <div className="lp-step-num">1</div>
+            <h3>Subes el documento</h3>
+            <p>
+              Un PDF o texto: contrato, póliza, balance, ficha. Al instante
+              detectamos y reemplazamos los datos personales.
+            </p>
+          </div>
+          <div className="lp-step-card">
+            <div className="lp-step-num">2</div>
+            <h3>Preguntas en lenguaje normal</h3>
+            <p>
+              Como si le hablaras a un colega. Sin comandos ni formatos
+              especiales — solo escribe tu duda.
+            </p>
+          </div>
+          <div className="lp-step-card">
+            <div className="lp-step-num">3</div>
+            <h3>Recibes la respuesta</h3>
+            <p>
+              Basada solo en tu documento. Y te mostramos exactamente qué datos
+              se mantuvieron privados.
+            </p>
+          </div>
+        </div>
       </section>
 
-      {/* Paso 1 — subir */}
-      <div className="card">
-        <h2>
-          <span className="step">1</span>Sube un documento
-        </h2>
-        <div
-          className={dragging ? "drop drag" : "drop"}
-          onClick={() => fileInput.current?.click()}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragging(true);
-          }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragging(false);
-            handleFile(e.dataTransfer.files?.[0] ?? null);
-          }}
-        >
-          <input
-            ref={fileInput}
-            type="file"
-            accept=".pdf,.txt"
-            hidden
-            onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
-          />
-          <div style={{ fontSize: 15, marginBottom: 4 }}>
-            {uploading
-              ? "Borrando datos privados e indexando…"
-              : "Arrastra un PDF o .txt aquí, o haz clic para elegir"}
+      {/* ---------- POR RUBRO ---------- */}
+      <section id="rubros" className="lp-section">
+        <h2 className="lp-h2">Pensado para quien maneja información delicada</h2>
+        <p className="lp-sub">
+          Si tu trabajo es leer documentos con datos de clientes, esto es para ti.
+        </p>
+        <div className="lp-rubros">
+          <div className="lp-rubro-card">
+            <div className="lp-rubro-ico">⚖️</div>
+            <h3>Estudios jurídicos</h3>
+            <p>Contratos, escrituras, poderes, demandas.</p>
+            <span className="lp-rubro-ex">
+              “¿Qué cláusula regula el término anticipado?”
+            </span>
           </div>
-          <div className="hint">
-            O sáltatelo — la demo ya tiene documentos de RR.HH. de ejemplo
-            cargados.
+          <div className="lp-rubro-card">
+            <div className="lp-rubro-ico">📊</div>
+            <h3>Oficinas contables</h3>
+            <p>Balances, declaraciones de renta, facturas.</p>
+            <span className="lp-rubro-ex">
+              “¿Cuánto fue el IVA del período?”
+            </span>
+          </div>
+          <div className="lp-rubro-card">
+            <div className="lp-rubro-ico">🛡️</div>
+            <h3>Corredoras de seguros</h3>
+            <p>Pólizas, informes de siniestro, liquidaciones.</p>
+            <span className="lp-rubro-ex">
+              “¿Qué coberturas excluye esta póliza?”
+            </span>
           </div>
         </div>
-        <div className="hint" style={{ marginTop: 10, fontSize: 12.5 }}>
-          🔒 Demo: lo que subes está aislado por sesión y se elimina solo. No
-          subas datos confidenciales de terceros. Ver{" "}
-          <Link href="/privacidad" style={{ color: "var(--accent)" }}>
-            aviso de privacidad
+      </section>
+
+      {/* ---------- PRIVACIDAD ---------- */}
+      <section id="privacidad" className="lp-section lp-privacy">
+        <div className="lp-privacy-grid">
+          <div>
+            <span className="lp-eyebrow">La diferencia</span>
+            <h2 className="lp-h2 lp-h2-left">
+              Tus clientes nunca llegan a la IA
+            </h2>
+            <p className="lp-privacy-p">
+              La mayoría de las herramientas envían tu documento entero a un
+              modelo externo. DocuSeguro no. Primero detecta los datos personales
+              —RUT, correos, teléfonos— y los reemplaza por etiquetas. Solo
+              entonces consulta a la inteligencia artificial.
+            </p>
+            <ul className="lp-checklist">
+              <li>El proveedor de IA jamás ve un RUT real</li>
+              <li>Lo que subes en la demo se elimina solo</li>
+              <li>Pensado para la Ley 21.719 de datos personales</li>
+            </ul>
+          </div>
+          <div className="lp-flow">
+            <div className="lp-flow-step">📄 Documento con datos reales</div>
+            <div className="lp-flow-arrow">↓</div>
+            <div className="lp-flow-step lp-flow-scrub">
+              🔒 Se borran RUT, correos, teléfonos
+            </div>
+            <div className="lp-flow-arrow">↓</div>
+            <div className="lp-flow-step lp-flow-ai">
+              🤖 La IA responde — sin datos privados
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- CTA FINAL ---------- */}
+      <section className="lp-final">
+        <h2>¿Listo para usarlo con tus propios documentos?</h2>
+        <p>
+          Crea tu cuenta y prueba DocuSeguro gratis durante 14 días. Sin tarjeta,
+          sin compromiso.
+        </p>
+        <div className="lp-hero-cta lp-center">
+          <Link href="/registro" className="lp-btn lp-btn-primary">
+            Empieza gratis ahora
           </Link>
-          .
+          <Link href="/app" className="lp-btn lp-btn-ghost">
+            Ver la demo primero
+          </Link>
         </div>
-        {file && (
-          <div className={ingestRes ? "filechip ok" : "filechip"}>
-            {uploading ? <span className="spinner" /> : "📄"} {file.name}
-            {ingestRes &&
-              ` · ${ingestRes.chunk_count} fragmentos${
-                ingestRes.pii_scrubbed ? " · datos privados borrados 🔒" : ""
-              }`}
-          </div>
-        )}
-      </div>
+      </section>
 
-      {/* Paso 2 — preguntar */}
-      <div className="card">
-        <h2>
-          <span className="step">2</span>Haz una pregunta
-        </h2>
-        <div className="qrow">
-          <textarea
-            rows={2}
-            placeholder="ej. ¿Cuántos días de vacaciones tienen los empleados?"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) runQuery();
-            }}
-          />
-          <button
-            className="primary"
-            disabled={loading || !q.trim()}
-            onClick={() => runQuery()}
-          >
-            {loading ? <span className="spinner" /> : "Preguntar"}
-          </button>
+      {/* ---------- FOOTER ---------- */}
+      <footer className="lp-footer">
+        <div className="brand brand-sm">
+          Docu<span className="brand-accent">Seguro</span>
         </div>
-        <div className="examples">
-          {EXAMPLES.map((ex) => (
-            <button key={ex} className="chip" onClick={() => runQuery(ex)}>
-              {ex}
-            </button>
-          ))}
+        <div className="lp-footer-links">
+          <Link href="/privacidad">Aviso de privacidad</Link>
+          <Link href="/terminos">Términos y condiciones</Link>
+          <a href="mailto:bast-1996@hotmail.com">Contacto</a>
         </div>
-        {error && <div className="error">⚠ {error}</div>}
-      </div>
-
-      {/* Paso 3 — respuesta */}
-      {res && (
-        <div className="card">
-          <h2>
-            <span className="step">3</span>Respuesta
-          </h2>
-          <div className="answer">{res.answer}</div>
-
-          <div className="metrics">
-            {res.pii_found ? (
-              <span className="metric green">
-                🔒 Datos privados ocultados: {res.pii_types.join(", ")}
-              </span>
-            ) : (
-              <span className="metric">🔓 Sin datos privados detectados</span>
-            )}
-            {res.cache_hit ? (
-              <span className="metric green">⚡ Respuesta en caché</span>
-            ) : (
-              <span className="metric">🧠 Consulta nueva al LLM</span>
-            )}
-            <span className="metric indigo">⏱ {res.latency_ms} ms</span>
-            {res.tokens_saved_pct != null && (
-              <span className="metric amber">
-                ✂ {res.tokens_saved_pct.toFixed(1)}% tokens ahorrados
-              </span>
-            )}
-            <span className="metric">📚 {res.chunk_count} fuentes</span>
-            <span className="metric">🤖 {res.llm_provider}</span>
-          </div>
-
-          {res.source_chunks.length > 0 && (
-            <details className="sources">
-              <summary>
-                Ver fuentes recuperadas ({res.source_chunks.length})
-              </summary>
-              {res.source_chunks.map((c) => (
-                <div className="source" key={c.chunk_id}>
-                  <span className="sim">{(c.similarity * 100).toFixed(1)}%</span>{" "}
-                  de coincidencia · {c.text_preview}
-                </div>
-              ))}
-            </details>
-          )}
-          <div className="hint" style={{ marginTop: 16, fontSize: 12.5 }}>
-            ⚠️ Respuesta generada por IA. Puede contener errores; no constituye
-            asesoría legal ni profesional.
-          </div>
+        <div className="lp-footer-fine">
+          DocuSeguro · Herramienta de consulta de documentos con IA · Chile
         </div>
-      )}
-
-      <div className="footer">
-        Funciona con{" "}
-        <a href={`${API_BASE}/docs`} target="_blank" rel="noreferrer">
-          la API de DocuSeguro
-        </a>{" "}
-        · los embeddings corren localmente · el LLM nunca ve tus datos privados
-        <br />
-        <Link href="/privacidad" className="legal-link">
-          Aviso de privacidad
-        </Link>{" "}
-        ·{" "}
-        <Link href="/terminos" className="legal-link">
-          Términos y condiciones
-        </Link>
-      </div>
-    </main>
+      </footer>
+    </div>
   );
 }
