@@ -124,7 +124,7 @@ export default function Home() {
           <span className="grad">Sin filtrar datos sensibles.</span>
         </h1>
         <p>
-          PrivRAG borra los datos privados (RUT, correos, teléfonos){" "}
+          DocuSeguro borra los datos privados (RUT, correos, teléfonos){" "}
           <strong>antes</strong> de que cualquier texto llegue a un LLM externo.
           Sube un documento, pregunta en lenguaje natural y mira exactamente qué
           se mantuvo privado.
@@ -273,7 +273,7 @@ export default function Home() {
       <div className="footer">
         Funciona con{" "}
         <a href={`${API_BASE}/docs`} target="_blank" rel="noreferrer">
-          la API de PrivRAG
+          la API de DocuSeguro
         </a>{" "}
         · los embeddings corren localmente · el LLM nunca ve tus datos privados
         <br />
