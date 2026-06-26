@@ -14,9 +14,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14-000000.svg?logo=next.js)](https://nextjs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-![DocuSeguro web app — ask a question, PII masked before the LLM, cited sources](assets/web-ui.svg)
-
-> The screenshot above mirrors the live UI. For a real capture of the running app, see [privrag.vercel.app](https://privrag.vercel.app).
+![DocuSeguro — landing page](assets/screens/landing.png)
 
 A production-ready RAG application that lets companies query their internal documents in natural language — **without ever sending sensitive data to an external LLM**. Ships with a FastAPI backend and a Next.js web app, both deployed live.
 
@@ -37,6 +35,28 @@ Built to demonstrate four enterprise AI engineering capabilities:
 - **Explainable citations** — retrieved passages numbered, relevance-scored, with the question's terms highlighted in-context.
 - **Word (.docx) support** — extracts paragraphs and tables.
 - **Evaluation harness** — `evals/` measures the PII scrubber's precision / recall / F1 against a labeled dataset (offline, CI-gated). Because measuring an AI system — not just running it — is what makes it production-grade.
+
+---
+
+## Screenshots
+
+**Ask a question — PII masked before the LLM, with cited sources**
+
+![Answer with masked PII and explainable citations](assets/screens/app-answer.png)
+
+The chip `🔒 Datos privados ocultados: email, rut` confirms the RUT and email were
+replaced with tokens **before** the LLM call. The answer shows them restored (for the
+user only); the cited source passages still show the `[uuid]` tokens — proof the model
+never saw the real values. Each source has a relevance bar and the question's terms
+highlighted.
+
+**Multi-turn conversation — follow-ups keep context**
+
+![Conversation thread with a follow-up question](assets/screens/conversation.png)
+
+**User dashboard — trial status and usage**
+
+![User dashboard](assets/screens/dashboard.png)
 
 ---
 
