@@ -16,7 +16,9 @@ EMBEDDING_BATCH_SIZE = 100
 
 ANTHROPIC_MODEL = "claude-haiku-3-5-20241022"
 OPENAI_MODEL = "gpt-4o-mini"
-GROQ_MODEL = "llama-3.1-8b-instant"
+# Groq discontinued llama-3.1-8b-instant (2026-06; removed 2026-08-16);
+# migrated to their recommended replacement.
+GROQ_MODEL = "openai/gpt-oss-20b"
 
 SYSTEM_PROMPT = (
     "You are a helpful assistant that answers questions based strictly on the provided context. "
