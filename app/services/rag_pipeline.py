@@ -93,6 +93,12 @@ class RAGPipeline:
         # `owner` scopes retrieval (account or anonymous session). Defaults to the
         # session_id to preserve the previous anonymous-only behaviour.
         search_owner = owner if owner is not None else session_id
+        # Extract the user id from an authenticated owner ("user:{id}") for logging.
+        user_id = (
+            int(owner.split(":", 1)[1])
+            if owner is not None and owner.startswith("user:")
+            else None
+        )
 
         # Step 1: Strip PII from query before touching external services
         clean_query, token_map, pii_types = self._scrubber.scrub(query_text)
@@ -115,6 +121,7 @@ class RAGPipeline:
             answer = "No encontré contexto relevante para responder esta consulta."
             await self._log_query(
                 session_id=session_id,
+                user_id=user_id,
                 query_text=query_text,
                 cache_hit=False,
                 chunk_count=0,
@@ -150,6 +157,7 @@ class RAGPipeline:
             logger.info("cache_hit", session_id=session_id, latency_ms=latency)
             await self._log_query(
                 session_id=session_id,
+                user_id=user_id,
                 query_text=query_text,
                 cache_hit=True,
                 chunk_count=len(chunks),
@@ -270,6 +278,7 @@ class RAGPipeline:
         provider: str,
         pii_found: bool,
         pii_types: list[str],
+        user_id: int | None = None,
         original_tokens: int | None = None,
         compressed_tokens: int | None = None,
     ) -> None:
@@ -278,6 +287,7 @@ class RAGPipeline:
         sid = self._parse_uuid(session_id)
         secret = settings.effective_audit_secret.encode()
         log = QueryLog(
+            user_id=user_id,
             session_id=sid,
             query_hash=hmac.new(secret, query_text.encode(), hashlib.sha256).hexdigest(),
             cache_hit=cache_hit,

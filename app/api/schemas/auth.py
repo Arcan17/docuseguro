@@ -20,3 +20,13 @@ class AuthResponse(BaseModel):
 class UserResponse(BaseModel):
     id: int
     email: str
+
+
+class StatsResponse(BaseModel):
+    email: str
+    trial_active: bool
+    trial_days_remaining: int
+    trial_expires_at: str
+    documents_count: int
+    queries_count: int
+    pii_events_count: int

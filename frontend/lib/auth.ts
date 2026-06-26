@@ -65,3 +65,23 @@ export async function login(email: string, password: string): Promise<AuthResult
 export function logout(): void {
   clearSession();
 }
+
+export interface Stats {
+  email: string;
+  trial_active: boolean;
+  trial_days_remaining: number;
+  trial_expires_at: string;
+  documents_count: number;
+  queries_count: number;
+  pii_events_count: number;
+}
+
+export async function getStats(): Promise<Stats | null> {
+  const token = getToken();
+  if (!token) return null;
+  const res = await fetch(`${API_BASE}/auth/stats`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return null;
+  return res.json();
+}

@@ -69,6 +69,10 @@ class Settings(BaseSettings):
     login_max_failures: int = 5
     login_lockout_seconds: int = 300
 
+    # Trial (Fase 2): free days from registration before upload/query is blocked.
+    trial_days: int = 14
+    trial_contact_email: str = "bast-1996@hotmail.com"
+
     @property
     def auth_enabled(self) -> bool:
         return bool(self.api_key)

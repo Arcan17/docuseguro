@@ -10,7 +10,7 @@ import {
   type IngestResponse,
   type QueryResponse,
 } from "../../lib/api";
-import { getEmail, logout } from "../../lib/auth";
+import { getEmail, getStats, logout, type Stats } from "../../lib/auth";
 
 const EXAMPLES = [
   "¿Cuántos días de vacaciones tienen los empleados?",
@@ -29,6 +29,7 @@ export default function DemoApp() {
   const [provider, setProvider] = useState<string | null>(null);
   const [online, setOnline] = useState<boolean>(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
 
   const [sessionId] = useState<string>(uuid);
   const [file, setFile] = useState<File | null>(null);
@@ -51,7 +52,10 @@ export default function DemoApp() {
       })
       .catch(() => setOnline(false));
     setUserEmail(getEmail());
+    getStats().then(setStats);
   }, []);
+
+  const trialExpired = stats != null && !stats.trial_active;
 
   function onLogout() {
     logout();
@@ -101,6 +105,14 @@ export default function DemoApp() {
         <div className="sessionbar">
           {userEmail ? (
             <>
+              {stats != null &&
+                (stats.trial_active ? (
+                  <span className="trial-pill">
+                    {stats.trial_days_remaining} días de prueba
+                  </span>
+                ) : (
+                  <span className="trial-pill trial-pill-off">Prueba vencida</span>
+                ))}
               <Link href="/dashboard" className="chip">
                 Mi panel
               </Link>
@@ -138,6 +150,14 @@ export default function DemoApp() {
           se mantuvo privado.
         </p>
       </section>
+
+      {trialExpired && (
+        <div className="trial-banner">
+          <strong>Tu período de prueba terminó.</strong> Puedes seguir viendo tu
+          historial, pero para subir documentos o hacer consultas escríbenos a{" "}
+          <a href="mailto:bast-1996@hotmail.com">bast-1996@hotmail.com</a>.
+        </div>
+      )}
 
       {/* Paso 1 — subir */}
       <div className="card">

@@ -12,6 +12,7 @@ from app.core.auth import require_api_key
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.core.rate_limit import rate_limit
+from app.core.trial import ensure_trial_active
 from app.models.database import get_db
 from app.models.document import Document
 from app.models.user import User
@@ -38,6 +39,8 @@ async def ingest_document(
     user: User | None = Depends(get_optional_user),
     db: AsyncSession = Depends(get_db),
 ) -> IngestResponse:
+    # Authenticated users with an expired trial cannot upload (anonymous users pass).
+    ensure_trial_active(user)
     # Owner = the account (persistent) if authenticated, else the browser session
     # (anonymous, ephemeral). Search isolates by this owner; cleanup only expires
     # anonymous uploads.

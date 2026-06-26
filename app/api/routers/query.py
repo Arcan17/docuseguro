@@ -7,6 +7,7 @@ from app.api.deps import get_optional_user
 from app.api.schemas.query import QueryRequest, QueryResponse, SourceChunk
 from app.core.auth import require_api_key
 from app.core.rate_limit import rate_limit
+from app.core.trial import ensure_trial_active
 from app.models.database import get_db
 from app.models.user import User
 from app.services.rag_pipeline import RAGPipeline
@@ -24,6 +25,8 @@ async def query_documents(
     user: User | None = Depends(get_optional_user),
     db: AsyncSession = Depends(get_db),
 ) -> QueryResponse:
+    # Authenticated users with an expired trial are blocked (anonymous users pass).
+    ensure_trial_active(user)
     # Search is scoped to this owner: the account if authenticated, else the
     # anonymous browser session.
     owner = f"user:{user.id}" if user is not None else request.session_id
