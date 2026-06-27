@@ -25,7 +25,7 @@ from app.services.vector_store import upsert_chunks
 logger = get_logger(__name__)
 router = APIRouter(prefix="/ingest", tags=["ingest"])
 
-ALLOWED_EXTENSIONS = {".pdf", ".txt", ".docx"}
+ALLOWED_EXTENSIONS = {".pdf", ".txt", ".docx", ".xlsx"}
 
 
 @router.post(
