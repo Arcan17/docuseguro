@@ -272,14 +272,14 @@ export default function DemoApp() {
           <input
             ref={fileInput}
             type="file"
-            accept=".pdf,.txt,.docx"
+            accept=".pdf,.txt,.docx,.xlsx"
             hidden
             onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
           />
           <div style={{ fontSize: 15, marginBottom: 4 }}>
             {uploading
               ? "Borrando datos privados e indexando…"
-              : "Arrastra un PDF, Word (.docx) o .txt aquí, o haz clic para elegir"}
+              : "Arrastra un PDF, Word, Excel o .txt aquí, o haz clic para elegir"}
           </div>
           <div className="hint">
             O sáltatelo — la demo ya tiene documentos de RR.HH. de ejemplo

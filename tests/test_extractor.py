@@ -36,3 +36,20 @@ def test_extract_docx_tables() -> None:
     text = extract_text(buf.getvalue(), "balance.docx")
     assert "Concepto | Monto" in text
     assert "Renta | $650.000" in text
+
+
+def test_extract_xlsx() -> None:
+    from openpyxl import Workbook
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Balance"
+    ws.append(["Cliente", "RUT", "Monto"])
+    ws.append(["Juan Pérez", "12.345.678-9", 650000])
+    buf = io.BytesIO()
+    wb.save(buf)
+
+    text = extract_text(buf.getvalue(), "balance.xlsx")
+    assert "=== Hoja: Balance ===" in text
+    assert "Cliente | RUT | Monto" in text
+    assert "Juan Pérez | 12.345.678-9 | 650000" in text
