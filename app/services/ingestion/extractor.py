@@ -38,16 +38,41 @@ def _extract_docx(content: bytes) -> str:
 def _extract_xlsx(content: bytes) -> str:
     from openpyxl import load_workbook  # type: ignore[import-untyped]
 
-    wb = load_workbook(io.BytesIO(content), read_only=True, data_only=True)
+    # read_only=False required to access number_format on each cell so we can
+    # reconstruct RUTs stored as formatted integers (e.g. 123456789 → 12.345.678-9).
+    wb = load_workbook(io.BytesIO(content), data_only=True)
     parts: list[str] = []
     for sheet in wb.worksheets:
         rows: list[str] = []
-        for row in sheet.iter_rows(values_only=True):
-            cells = [str(c).strip() for c in row if c is not None and str(c).strip()]
+        for row in sheet.iter_rows():
+            cells = [s for c in row if (s := _xlsx_cell(c))]
             if cells:
                 rows.append(" | ".join(cells))
         if rows:
-            # Prefix each sheet so multi-tab books keep context.
             parts.append(f"=== Hoja: {sheet.title} ===\n" + "\n".join(rows))
     wb.close()
     return "\n\n".join(parts)
+
+
+def _xlsx_cell(cell: object) -> str:
+    """Return a cell's display string, reconstructing RUT-formatted numbers.
+
+    When openpyxl reads an integer whose number_format contains dots and a dash
+    (e.g. "##.###.###-0"), the raw value is e.g. 123456789 and the scrubber
+    regex would miss it. We detect that pattern and rebuild "12.345.678-9".
+    """
+    val = getattr(cell, "value", None)
+    if val is None:
+        return ""
+    if isinstance(val, int):
+        fmt: str = getattr(cell, "number_format", "") or ""
+        if "." in fmt and "-" in fmt:
+            s = str(abs(val))
+            if 7 <= len(s) <= 9:
+                body, verif = s[:-1], s[-1]
+                parts: list[str] = []
+                while body:
+                    parts.append(body[-3:] if len(body) >= 3 else body)
+                    body = body[:-3]
+                return ".".join(reversed(parts)) + f"-{verif}"
+    return str(val).strip()

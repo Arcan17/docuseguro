@@ -53,3 +53,29 @@ def test_extract_xlsx() -> None:
     assert "=== Hoja: Balance ===" in text
     assert "Cliente | RUT | Monto" in text
     assert "Juan Pérez | 12.345.678-9 | 650000" in text
+
+
+def test_extract_xlsx_numeric_rut() -> None:
+    """RUT guardado como número con formato (caso reportado por Codex).
+
+    Excel auto-convierte "12.345.678-9" a 123456789 cuando la celda no es texto.
+    El extractor debe reconstruir la forma con puntos y guión para que el
+    scrubber de PII lo detecte correctamente.
+    """
+    from openpyxl import Workbook
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Nómina"
+    ws.cell(row=1, column=1, value="Nombre")
+    ws.cell(row=1, column=2, value="RUT")
+    ws.cell(row=2, column=1, value="Ana González")
+    rut_cell = ws.cell(row=2, column=2, value=123456789)
+    rut_cell.number_format = "##.###.###-0"  # formato RUT en Excel
+    buf = io.BytesIO()
+    wb.save(buf)
+
+    text = extract_text(buf.getvalue(), "nomina.xlsx")
+    # Debe verse como RUT formateado, no como número crudo
+    assert "12.345.678-9" in text
+    assert "123456789" not in text
