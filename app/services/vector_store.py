@@ -128,10 +128,18 @@ def _sync_search(
     if count == 0:
         return []
 
-    # Only the shared demo docs + this session's own uploads are visible.
+    # Isolation strategy: if the session has uploaded its own documents, search
+    # *only* those — don't mix with demo docs. Mixing causes Spanish demo chunks
+    # to outscore English user uploads for Spanish queries (bge-small-en-v1.5 is
+    # English-focused; the demo docs are in Spanish and pull ahead on cosine sim).
+    # Fall back to demo-only when the session has no chunks of its own.
     where: dict[str, Any] | None
     if session_id:
-        where = {"$or": [{"source": "demo"}, {"session_id": session_id}]}
+        probe = col.get(where={"session_id": session_id}, limit=1, include=[])
+        if probe["ids"]:
+            where = {"session_id": session_id}
+        else:
+            where = {"source": "demo"}
     else:
         where = {"source": "demo"}
 
