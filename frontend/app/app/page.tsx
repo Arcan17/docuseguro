@@ -77,7 +77,15 @@ export default function DemoApp() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
 
-  const [sessionId] = useState<string>(uuid);
+  // Persist session across page reloads so uploaded documents stay accessible.
+  const [sessionId] = useState<string>(() => {
+    if (typeof window === "undefined") return uuid();
+    const stored = localStorage.getItem("privrag_session_id");
+    if (stored) return stored;
+    const id = uuid();
+    localStorage.setItem("privrag_session_id", id);
+    return id;
+  });
   const [file, setFile] = useState<File | null>(null);
   const [ingestRes, setIngestRes] = useState<IngestResponse | null>(null);
   const [uploading, setUploading] = useState(false);
