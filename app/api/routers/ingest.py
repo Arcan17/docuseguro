@@ -66,22 +66,26 @@ async def ingest_document(
         )
     content_hash = hashlib.sha256(content).hexdigest()
 
-    # Dedup scoped to the owner: skip re-ingestion of identical content the same
-    # account (or anonymous bucket) already uploaded.
-    existing = await db.scalar(
-        select(Document).where(
-            Document.content_hash == content_hash,
-            Document.user_id == doc_user_id,
+    # Dedup only for authenticated users: their docs persist across sessions so
+    # skipping re-indexing is safe. Anonymous sessions are ephemeral — the same
+    # file may be uploaded in a new session with a fresh ChromaDB owner bucket,
+    # so we always re-index to avoid returning a stale doc whose vectors live
+    # under a different session_id.
+    if doc_user_id is not None:
+        existing = await db.scalar(
+            select(Document).where(
+                Document.content_hash == content_hash,
+                Document.user_id == doc_user_id,
+            )
         )
-    )
-    if existing:
-        logger.info("ingest_skipped_duplicate", filename=filename, doc_id=existing.id)
-        return IngestResponse(
-            doc_id=existing.id,
-            filename=existing.filename,
-            chunk_count=existing.chunk_count,
-            status="duplicate",
-        )
+        if existing:
+            logger.info("ingest_skipped_duplicate", filename=filename, doc_id=existing.id)
+            return IngestResponse(
+                doc_id=existing.id,
+                filename=existing.filename,
+                chunk_count=existing.chunk_count,
+                status="duplicate",
+            )
 
     doc = Document(
         filename=filename,
