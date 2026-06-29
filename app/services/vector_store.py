@@ -135,11 +135,12 @@ def _sync_search(
     # Fall back to demo-only when the session has no chunks of its own.
     where: dict[str, Any] | None
     if session_id:
-        probe = col.get(where={"session_id": session_id}, limit=1, include=[])
-        if probe["ids"]:
-            where = {"session_id": session_id}
-        else:
-            where = {"source": "demo"}
+        try:
+            probe = col.get(where={"session_id": session_id}, limit=1)
+            has_session = bool(probe.get("ids"))
+        except Exception:
+            has_session = False
+        where = {"session_id": session_id} if has_session else {"source": "demo"}
     else:
         where = {"source": "demo"}
 
