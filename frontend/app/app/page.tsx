@@ -119,8 +119,14 @@ export default function DemoApp() {
     setUserEmail(null);
   }
 
+  const MAX_FILE_MB = 10;
+
   async function handleFile(f: File | null) {
     if (!f) return;
+    if (f.size > MAX_FILE_MB * 1024 * 1024) {
+      setError(`El archivo supera el límite de ${MAX_FILE_MB} MB. Sube un archivo más pequeño.`);
+      return;
+    }
     setFile(f);
     setIngestRes(null);
     setError(null);
@@ -292,6 +298,9 @@ export default function DemoApp() {
           <div className="hint">
             O sáltatelo — la demo ya tiene documentos de RR.HH. de ejemplo
             cargados.
+          </div>
+          <div className="hint" style={{ marginTop: 6, fontSize: 11.5, opacity: 0.7 }}>
+            Máx. 10 MB · PDF, Word, Excel, TXT · 1 archivo por sesión
           </div>
         </div>
         <div className="hint" style={{ marginTop: 10, fontSize: 12.5 }}>
