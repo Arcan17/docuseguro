@@ -258,6 +258,12 @@ export default function Landing() {
           </div>
         </div>
 
+        <div className="lp-proximamente">
+          <span className="lp-badge">Próximamente</span>
+          Guarda tus documentos y consúltalos cuando quieras —
+          buscándolos por cliente o por documento— sin volver a subirlos.
+        </div>
+
         <div className="lp-contacto">
           <p>
             ¿Lo quieres para tu empresa? Agenda una demo — te la mostramos en
@@ -308,9 +314,28 @@ export default function Landing() {
             border: 2px solid #c9a24b;
             box-shadow: 0 6px 24px rgba(160, 130, 60, .15);
           }
+          .lp-proximamente {
+            max-width: 720px;
+            margin: 26px auto 0;
+            text-align: center;
+            font-size: 15px;
+            color: #5b6472;
+          }
+          .lp-badge {
+            display: inline-block;
+            background: rgba(201, 162, 75, .18);
+            color: #7a5b17;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .03em;
+            text-transform: uppercase;
+            padding: 2px 9px;
+            border-radius: 999px;
+            margin-right: 8px;
+          }
           .lp-contacto {
             max-width: 620px;
-            margin: 34px auto 0;
+            margin: 30px auto 0;
             text-align: center;
           }
           .lp-contacto p { margin-bottom: 16px; }
