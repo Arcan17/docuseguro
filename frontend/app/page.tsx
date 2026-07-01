@@ -201,7 +201,10 @@ export default function Landing() {
             <ul className="lp-checklist">
               <li>El proveedor de IA jamás ve un RUT real</li>
               <li>Lo que subes en la demo se elimina solo</li>
-              <li>Pensado para la Ley 21.719 de datos personales</li>
+              <li>
+                Diseñado pensando en la nueva ley chilena de protección de datos
+                personales (Ley 21.719)
+              </li>
             </ul>
           </div>
           <div className="lp-flow">
@@ -262,6 +265,11 @@ export default function Landing() {
           <span className="lp-badge">Próximamente</span>
           Guarda tus documentos y consúltalos cuando quieras —
           buscándolos por cliente o por documento— sin volver a subirlos.
+        </div>
+
+        <div className="lp-ley">
+          ⚖️ Diseñado pensando en la nueva ley chilena de protección de datos
+          personales (Ley 21.719).
         </div>
 
         <div className="lp-contacto">
@@ -332,6 +340,13 @@ export default function Landing() {
             padding: 2px 9px;
             border-radius: 999px;
             margin-right: 8px;
+          }
+          .lp-ley {
+            max-width: 720px;
+            margin: 10px auto 0;
+            text-align: center;
+            font-size: 14px;
+            color: #5b6472;
           }
           .lp-contacto {
             max-width: 620px;
