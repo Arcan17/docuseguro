@@ -108,3 +108,33 @@ async def test_ingest_pii_document_sets_flag(
     all_text = " ".join(c.text for c in captured_chunks)
     assert "12.345.678-9" not in all_text
     assert "ana@empresa.cl" not in all_text
+
+
+async def test_ingest_unreadable_file_returns_clear_error(
+    app_client: AsyncClient,
+) -> None:
+    """A file with no readable text (e.g. an image/scan) must fail with a clear
+    422 message, not silently index zero chunks nor a generic 500."""
+    with (
+        patch("app.api.routers.ingest.embed_chunks", new_callable=AsyncMock),
+        patch("app.api.routers.ingest.upsert_chunks", new_callable=AsyncMock),
+    ):
+        resp = await app_client.post(
+            "/ingest",
+            files={"file": ("escaneo.txt", b"   \n  \n ", "text/plain")},
+        )
+
+    assert resp.status_code == 422
+    assert "texto legible" in resp.json()["detail"]
+
+
+async def test_ingest_unsupported_type_message_in_spanish(
+    app_client: AsyncClient,
+) -> None:
+    """An unsupported type is rejected with a helpful Spanish message."""
+    resp = await app_client.post(
+        "/ingest",
+        files={"file": ("foto.png", b"\x89PNG\r\n", "image/png")},
+    )
+    assert resp.status_code == 400
+    assert "no soportado" in resp.json()["detail"]

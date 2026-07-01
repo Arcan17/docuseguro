@@ -1,6 +1,7 @@
 import hashlib
 import time
 import uuid
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 from sqlalchemy import select
@@ -19,6 +20,7 @@ from app.models.user import User
 from app.services.ingestion.chunker import semantic_chunk
 from app.services.ingestion.embedder import embed_chunks
 from app.services.ingestion.extractor import extract_text
+from app.services.privacy.doc_pii import persist_doc_map
 from app.services.privacy.scrubber import PIIScrubber
 from app.services.vector_store import upsert_chunks
 
@@ -55,7 +57,15 @@ async def ingest_document(
     filename = file.filename or "unknown"
     ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     if ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
+        permitidos = ", ".join(sorted(e.lstrip(".") for e in ALLOWED_EXTENSIONS))
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Tipo de archivo no soportado ({ext or 'sin extensión'}). "
+                f"Por ahora aceptamos: {permitidos}. "
+                "Si es una imagen o un PDF escaneado, todavía no podemos leerlo."
+            ),
+        )
 
     content = await file.read()
     max_bytes = settings.max_upload_size_mb * 1024 * 1024
@@ -99,14 +109,45 @@ async def ingest_document(
     doc_id = str(doc.id)
 
     pii_scrubbed = False
+
+    # Extract text in isolation first. A file we cannot parse (corrupt, password
+    # protected, or an image/scan with no text layer) is a problem with the file,
+    # not the server — surface a clear message instead of a generic 500 or a
+    # silent zero-chunk "success".
     try:
         text = extract_text(content, filename)
+    except Exception as exc:
+        doc.status = "error"
+        await db.commit()
+        logger.warning("ingest_extract_failed", filename=filename, error=str(exc))
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "No pudimos leer el contenido de este archivo. Puede estar dañado, "
+                "protegido con contraseña, o ser una imagen/escaneo sin texto "
+                "seleccionable."
+            ),
+        ) from exc
 
+    if len(text.strip()) < 20:
+        doc.status = "error"
+        await db.commit()
+        logger.info("ingest_no_text", filename=filename, chars=len(text.strip()))
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "No encontramos texto legible en el archivo. Si es una foto o un PDF "
+                "escaneado, todavía no podemos leerlo (la lectura de imágenes está en "
+                "camino)."
+            ),
+        )
+
+    try:
         # Scrub PII from document text before chunking/embedding
         # so the vector store never holds raw identifiers
         scrubber = PIIScrubber(spacy_enabled=settings.spacy_enabled)
-        clean_text, _token_map, pii_types = scrubber.scrub(text)
-        if _token_map:
+        clean_text, doc_token_map, pii_types = scrubber.scrub(text)
+        if doc_token_map:
             pii_scrubbed = True
             logger.info(
                 "ingest_pii_scrubbed",
@@ -122,6 +163,16 @@ async def ingest_document(
             # Only anonymous uploads carry a timestamp and are auto-expired.
             meta["uploaded_at"] = time.time()
         await upsert_chunks(doc_id, chunks, embeddings, metadata_extra=meta)
+
+        # Keep the document's PII map so its identifiers can be restored (with their
+        # real values) in answers. Stored in the relational DB, never in the vector
+        # store. Anonymous uploads expire with their chunks; account docs persist.
+        doc_pii_expires = (
+            datetime.now(UTC) + timedelta(seconds=settings.upload_ttl_seconds)
+            if doc_user_id is None
+            else None
+        )
+        await persist_doc_map(db, doc_id, doc_token_map, doc_pii_expires)
 
         doc.chunk_count = len(chunks)
         doc.status = "ready"

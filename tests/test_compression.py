@@ -43,3 +43,34 @@ def test_compress_multiple_chunks() -> None:
     ]
     compressed, orig, comp = compress_context(chunks)
     assert len(compressed) > 0
+
+
+def test_compress_keeps_short_invoice_values() -> None:
+    # Regresión: una factura son líneas cortas (montos, folios, totales). El
+    # compresor no debe descartarlas por ser <=10 caracteres.
+    invoice = (
+        "Factura N° 12345\n"
+        "Detalle | Cantidad | Precio | Total\n"
+        "Servicio | 2 | 1000 | 2000\n"
+        "Neto\n"
+        "$2.000\n"
+        "IVA 19%\n"
+        "$380\n"
+        "Total\n"
+        "$2.380"
+    )
+    chunks = [_make_result(invoice)]
+    compressed, _, _ = compress_context(chunks)
+    for value in ["12345", "$2.000", "$380", "$2.380", "IVA 19%", "Total", "Neto"]:
+        assert value in compressed, f"se perdió el valor {value!r}"
+
+
+def test_compress_preserves_line_structure() -> None:
+    # Las filas de una tabla no deben fusionarse en un solo blob de una línea.
+    invoice = "Total\n$2.380\nNeto\n$2.000"
+    chunks = [_make_result(invoice)]
+    compressed, _, _ = compress_context(chunks)
+    assert "\n" in compressed
+    # "Total" y su valor quedan en líneas contiguas, no revueltos con el resto.
+    lines = compressed.split("\n")
+    assert lines[lines.index("Total") + 1] == "$2.380"

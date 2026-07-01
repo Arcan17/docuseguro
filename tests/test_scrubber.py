@@ -69,6 +69,19 @@ def test_scrub_no_pii(scrubber: PIIScrubber) -> None:
     assert detected == []
 
 
+def test_markers_are_readable_and_typed(scrubber: PIIScrubber) -> None:
+    text = "RUT 12.345.678-9 y otro 9.876.543-K, correo a@b.cl, fono +56 9 8765 4321"
+    clean, token_map, _ = scrubber.scrub(text)
+    # Marcadores legibles por tipo e índice, no UUIDs.
+    assert "[RUT_1]" in clean
+    assert "[RUT_2]" in clean
+    assert "[CORREO_1]" in clean
+    assert "[TELEFONO_1]" in clean
+    # El mapa apunta cada marcador a su valor original.
+    assert token_map["RUT_1"] == "12.345.678-9"
+    assert token_map["CORREO_1"] == "a@b.cl"
+
+
 def test_duplicate_pii_values_single_token(scrubber: PIIScrubber) -> None:
     text = "RUT 12.345.678-9 repetido: 12.345.678-9"
     clean, token_map, _ = scrubber.scrub(text)
