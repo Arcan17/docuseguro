@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getEmail } from "../lib/auth";
+import DemoAnimada from "./components/DemoAnimada";
 
 export default function Landing() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -43,18 +44,18 @@ export default function Landing() {
       <header className="lp-hero">
         <div className="lp-hero-text">
           <span className="lp-eyebrow">
-            Inteligencia artificial · con tus datos protegidos
+            Tus documentos, con tus datos protegidos
           </span>
           <h1>
-            Conversa con tus documentos.
+            Hazle preguntas a tus documentos.
             <br />
-            <span className="grad">Sin exponer datos privados.</span>
+            <span className="grad">Tus datos privados quedan protegidos.</span>
           </h1>
           <p>
-            Sube un contrato, una póliza o un balance y pregúntale en lenguaje
-            normal. DocuSeguro borra automáticamente los RUT, correos y teléfonos{" "}
-            <strong>antes</strong> de que el texto llegue a la inteligencia
-            artificial.
+            Sube un documento —un contrato, una boleta, un informe— y pregúntale
+            lo que quieras saber, como si le hablaras a una persona. Te responde
+            al instante, y los datos privados que aparecen en él (como el RUT o el
+            teléfono) quedan <strong>ocultos y protegidos</strong>.
           </p>
           <div className="lp-hero-cta">
             <Link href="/registro" className="lp-btn lp-btn-primary">
@@ -104,33 +105,40 @@ export default function Landing() {
 
       {/* ---------- CÓMO FUNCIONA ---------- */}
       <section id="como-funciona" className="lp-section">
-        <h2 className="lp-h2">Tres pasos. Cero filtraciones.</h2>
+        <h2 className="lp-h2">Así de fácil. Y tus datos, protegidos.</h2>
         <div className="lp-steps">
           <div className="lp-step-card">
             <div className="lp-step-num">1</div>
-            <h3>Subes el documento</h3>
+            <h3>Subes tu documento</h3>
             <p>
-              Un PDF o texto: contrato, póliza, balance, ficha. Al instante
-              detectamos y reemplazamos los datos personales.
+              Un contrato, una boleta, un informe… lo subes y listo. No necesitas
+              instalar nada.
             </p>
           </div>
           <div className="lp-step-card">
             <div className="lp-step-num">2</div>
-            <h3>Preguntas en lenguaje normal</h3>
+            <h3>Haces tu pregunta</h3>
             <p>
-              Como si le hablaras a un colega. Sin comandos ni formatos
-              especiales — solo escribe tu duda.
+              Escribes lo que quieres saber con tus propias palabras, como si le
+              preguntaras a alguien.
             </p>
           </div>
           <div className="lp-step-card">
             <div className="lp-step-num">3</div>
             <h3>Recibes la respuesta</h3>
             <p>
-              Basada solo en tu documento. Y te mostramos exactamente qué datos
-              se mantuvieron privados.
+              Clara y al instante, tomada solo de tu documento. Y tus datos
+              privados quedan siempre protegidos.
             </p>
           </div>
         </div>
+      </section>
+
+      {/* ---------- DEMOSTRACIÓN ---------- */}
+      <section id="demo" className="lp-section">
+        <h2 className="lp-h2">Míralo funcionando</h2>
+        <p className="lp-sub">Un ejemplo real, en segundos.</p>
+        <DemoAnimada />
       </section>
 
       {/* ---------- POR RUBRO ---------- */}

@@ -246,13 +246,11 @@ export default function DemoApp() {
         <h1>
           Pregúntale lo que sea a tus documentos.
           <br />
-          <span className="grad">Sin filtrar datos sensibles.</span>
+          <span className="grad">Sin exponer tus datos privados.</span>
         </h1>
         <p>
-          DocuSeguro borra los datos privados (RUT, correos, teléfonos){" "}
-          <strong>antes</strong> de que cualquier texto llegue a un LLM externo.
-          Sube un documento, pregunta en lenguaje natural y mira exactamente qué
-          se mantuvo privado.
+          Sube un documento y pregúntale lo que quieras. Tus datos privados
+          quedan <strong>protegidos</strong>.
         </p>
       </section>
 
@@ -406,7 +404,7 @@ export default function DemoApp() {
             {res.cache_hit ? (
               <span className="metric green">⚡ Respuesta en caché</span>
             ) : (
-              <span className="metric">🧠 Consulta nueva al LLM</span>
+              <span className="metric">🧠 Nueva consulta a la IA</span>
             )}
             <span className="metric indigo">⏱ {res.latency_ms} ms</span>
             {res.tokens_saved_pct != null && (
@@ -470,7 +468,7 @@ export default function DemoApp() {
         <a href={`${API_BASE}/docs`} target="_blank" rel="noreferrer">
           la API de DocuSeguro
         </a>{" "}
-        · los embeddings corren localmente · el LLM nunca ve tus datos privados
+        · tu documento se procesa de forma privada · la IA nunca ve tus datos personales
         <br />
         <Link href="/privacidad" className="legal-link">
           Aviso de privacidad

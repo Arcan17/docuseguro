@@ -12,3 +12,4 @@ build/
 *.egg-info/
 .DS_Store
 docker-compose.local.yml
+.vercel
