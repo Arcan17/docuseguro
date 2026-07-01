@@ -12,6 +12,15 @@ export default function Landing() {
     setUserEmail(getEmail());
   }, []);
 
+  const contactoMsg =
+    "Hola, me interesa DocuSeguro y quiero agendar una demo.";
+  const MAILTO = `mailto:bast-1996@hotmail.com?subject=${encodeURIComponent(
+    "Quiero una demo de DocuSeguro"
+  )}&body=${encodeURIComponent(contactoMsg)}`;
+  const WHATSAPP = `https://wa.me/56975503354?text=${encodeURIComponent(
+    contactoMsg
+  )}`;
+
   return (
     <div className="lp">
       {/* ---------- NAV ---------- */}
@@ -207,6 +216,105 @@ export default function Landing() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* ---------- PLANES / EMPRESAS ---------- */}
+      <section id="planes" className="lp-section">
+        <h2 className="lp-h2">Empieza con una prueba. Crece a tu medida.</h2>
+        <p className="lp-sub">
+          Un modelo simple para equipos que trabajan con documentos de sus
+          clientes.
+        </p>
+        <div className="lp-planes">
+          <div className="lp-step-card lp-plan">
+            <div className="lp-plan-tag">1 · Prueba</div>
+            <h3>Prueba gratis</h3>
+            <div className="lp-plan-price">14 días · sin tarjeta</div>
+            <ul className="lp-checklist">
+              <li>Súbelo y pruébalo con tu equipo</li>
+              <li>Sin instalar nada</li>
+              <li>Sin compromiso</li>
+            </ul>
+          </div>
+          <div className="lp-step-card lp-plan lp-plan-featured">
+            <div className="lp-plan-tag">2 · A tu medida</div>
+            <h3>Ajuste a medida</h3>
+            <div className="lp-plan-price">Consultar</div>
+            <ul className="lp-checklist">
+              <li>Lo adaptamos a tus tipos de documento</li>
+              <li>A tu forma de trabajar y tu marca</li>
+              <li>Opción de instalarlo en tu propio servidor</li>
+            </ul>
+          </div>
+          <div className="lp-step-card lp-plan">
+            <div className="lp-plan-tag">3 · Mantención</div>
+            <h3>Mantención mensual</h3>
+            <div className="lp-plan-price">Consultar</div>
+            <ul className="lp-checklist">
+              <li>Soporte y actualizaciones</li>
+              <li>Nos encargamos de que siempre funcione</li>
+              <li>Mejoras según tus necesidades</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="lp-contacto">
+          <p>
+            ¿Lo quieres para tu empresa? Agenda una demo — te la mostramos en
+            menos de 10 minutos, sin compromiso.
+          </p>
+          <div className="lp-hero-cta lp-center">
+            <a className="lp-btn lp-btn-primary" href={MAILTO}>
+              ✉️ Escríbenos
+            </a>
+            <a
+              className="lp-btn lp-btn-soft"
+              href={WHATSAPP}
+              target="_blank"
+              rel="noreferrer"
+            >
+              💬 WhatsApp
+            </a>
+          </div>
+        </div>
+
+        <style>{`
+          .lp-planes {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 960px;
+            margin: 0 auto;
+          }
+          @media (max-width: 760px) {
+            .lp-planes { grid-template-columns: 1fr; }
+          }
+          .lp-plan { text-align: left; }
+          .lp-plan h3 { margin: 6px 0 2px; }
+          .lp-plan-tag {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            color: #9a7b3a;
+          }
+          .lp-plan-price {
+            font-size: 15px;
+            font-weight: 600;
+            color: #7a5b17;
+            margin-bottom: 10px;
+          }
+          .lp-plan-featured {
+            border: 2px solid #c9a24b;
+            box-shadow: 0 6px 24px rgba(160, 130, 60, .15);
+          }
+          .lp-contacto {
+            max-width: 620px;
+            margin: 34px auto 0;
+            text-align: center;
+          }
+          .lp-contacto p { margin-bottom: 16px; }
+        `}</style>
       </section>
 
       {/* ---------- CTA FINAL ---------- */}
