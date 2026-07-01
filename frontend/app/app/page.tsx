@@ -284,21 +284,21 @@ export default function DemoApp() {
           <input
             ref={fileInput}
             type="file"
-            accept=".pdf,.txt,.docx,.xlsx"
+            accept=".pdf,.txt,.docx,.xlsx,.pptx,.csv"
             hidden
             onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
           />
           <div style={{ fontSize: 15, marginBottom: 4 }}>
             {uploading
-              ? "Borrando datos privados e indexando…"
-              : "Arrastra un PDF, Word, Excel o .txt aquí, o haz clic para elegir"}
+              ? "Protegiendo tus datos…"
+              : "Arrastra tu documento aquí, o haz clic para elegir"}
           </div>
           <div className="hint">
             O sáltatelo — la demo ya tiene documentos de RR.HH. de ejemplo
             cargados.
           </div>
           <div className="hint" style={{ marginTop: 6, fontSize: 11.5, opacity: 0.7 }}>
-            Máx. 10 MB · PDF, Word, Excel, TXT · 1 archivo por sesión
+            Máx. 10 MB · PDF, Word, Excel, PowerPoint, CSV, TXT · 1 archivo por sesión
           </div>
         </div>
         <div className="hint" style={{ marginTop: 10, fontSize: 12.5 }}>

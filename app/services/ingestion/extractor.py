@@ -2,7 +2,7 @@ import io
 
 
 def extract_text(content: bytes, filename: str) -> str:
-    """Extract plain text from PDF, Word (.docx), Excel (.xlsx) or text bytes."""
+    """Extract plain text from PDF, Word, Excel, PowerPoint, CSV or text bytes."""
     name = filename.lower()
     if name.endswith(".pdf"):
         return _extract_pdf(content)
@@ -10,6 +10,10 @@ def extract_text(content: bytes, filename: str) -> str:
         return _extract_docx(content)
     if name.endswith(".xlsx"):
         return _extract_xlsx(content)
+    if name.endswith(".pptx"):
+        return _extract_pptx(content)
+    if name.endswith(".csv"):
+        return _extract_csv(content)
     return content.decode("utf-8", errors="replace")
 
 
@@ -76,3 +80,44 @@ def _xlsx_cell(cell: object) -> str:
                     body = body[:-3]
                 return ".".join(reversed(parts)) + f"-{verif}"
     return str(val).strip()
+
+
+def _extract_pptx(content: bytes) -> str:
+    from pptx import Presentation  # type: ignore[import-untyped]
+
+    prs = Presentation(io.BytesIO(content))
+    parts: list[str] = []
+    for i, slide in enumerate(prs.slides, start=1):
+        lines: list[str] = []
+        for shape in slide.shapes:
+            if shape.has_text_frame:
+                for para in shape.text_frame.paragraphs:
+                    text = "".join(run.text for run in para.runs).strip()
+                    if text:
+                        lines.append(text)
+            if shape.has_table:
+                for row in shape.table.rows:
+                    cells = [c.text.strip() for c in row.cells if c.text.strip()]
+                    if cells:
+                        lines.append(" | ".join(cells))
+        if lines:
+            parts.append(f"=== Diapositiva {i} ===\n" + "\n".join(lines))
+    return "\n\n".join(parts)
+
+
+def _extract_csv(content: bytes) -> str:
+    import csv
+
+    # utf-8-sig strips a BOM if present; Chilean CSVs often use ';' as delimiter
+    # because ',' is the decimal separator, so we sniff it.
+    text = content.decode("utf-8-sig", errors="replace")
+    try:
+        dialect = csv.Sniffer().sniff(text[:4096], delimiters=",;\t|")
+    except csv.Error:
+        dialect = csv.excel
+    rows: list[str] = []
+    for row in csv.reader(io.StringIO(text), dialect):
+        cells = [c.strip() for c in row if c.strip()]
+        if cells:
+            rows.append(" | ".join(cells))
+    return "\n".join(rows)
