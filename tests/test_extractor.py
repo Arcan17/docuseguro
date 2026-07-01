@@ -79,3 +79,36 @@ def test_extract_xlsx_numeric_rut() -> None:
     # Debe verse como RUT formateado, no como número crudo
     assert "12.345.678-9" in text
     assert "123456789" not in text
+
+
+def test_extract_csv_comma() -> None:
+    csv_bytes = b"Cliente,RUT,Monto\nJuan Perez,12.345.678-9,650000\n"
+    text = extract_text(csv_bytes, "clientes.csv")
+    assert "Cliente | RUT | Monto" in text
+    assert "Juan Perez | 12.345.678-9 | 650000" in text
+
+
+def test_extract_csv_semicolon() -> None:
+    # CSV chileno con ';' (porque ',' es separador decimal).
+    csv_bytes = b"Producto;Precio\nServicio;$1.000\n"
+    text = extract_text(csv_bytes, "precios.csv")
+    assert "Producto | Precio" in text
+    assert "Servicio | $1.000" in text
+
+
+def test_extract_pptx() -> None:
+    from pptx import Presentation
+    from pptx.util import Inches
+
+    prs = Presentation()
+    slide = prs.slides.add_slide(prs.slide_layouts[5])  # layout con título
+    slide.shapes.title.text = "Propuesta comercial"
+    tb = slide.shapes.add_textbox(Inches(1), Inches(2), Inches(4), Inches(1))
+    tb.text_frame.text = "Renta mensual: $650.000"
+    buf = io.BytesIO()
+    prs.save(buf)
+
+    text = extract_text(buf.getvalue(), "propuesta.pptx")
+    assert "=== Diapositiva 1 ===" in text
+    assert "Propuesta comercial" in text
+    assert "Renta mensual: $650.000" in text

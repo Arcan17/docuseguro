@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getEmail } from "../lib/auth";
+import DemoAnimada from "./components/DemoAnimada";
 
 export default function Landing() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -10,6 +11,15 @@ export default function Landing() {
   useEffect(() => {
     setUserEmail(getEmail());
   }, []);
+
+  const contactoMsg =
+    "Hola, me interesa DocuSeguro y quiero agendar una demo.";
+  const MAILTO = `mailto:bast-1996@hotmail.com?subject=${encodeURIComponent(
+    "Quiero una demo de DocuSeguro"
+  )}&body=${encodeURIComponent(contactoMsg)}`;
+  const WHATSAPP = `https://wa.me/56975503354?text=${encodeURIComponent(
+    contactoMsg
+  )}`;
 
   return (
     <div className="lp">
@@ -43,29 +53,29 @@ export default function Landing() {
       <header className="lp-hero">
         <div className="lp-hero-text">
           <span className="lp-eyebrow">
-            Inteligencia artificial · con tus datos protegidos
+            Tus documentos, con tus datos protegidos
           </span>
           <h1>
-            Conversa con tus documentos.
+            Hazle preguntas a tus documentos.
             <br />
-            <span className="grad">Sin exponer datos privados.</span>
+            <span className="grad">Tus datos privados quedan protegidos.</span>
           </h1>
           <p>
-            Sube un contrato, una póliza o un balance y pregúntale en lenguaje
-            normal. DocuSeguro borra automáticamente los RUT, correos y teléfonos{" "}
-            <strong>antes</strong> de que el texto llegue a la inteligencia
-            artificial.
+            Sube un documento —un contrato, una boleta, un informe— y pregúntale
+            lo que quieras saber, como si le hablaras a una persona. Te responde
+            al instante, y los datos privados que aparecen en él (como el RUT o el
+            teléfono) quedan <strong>ocultos y protegidos</strong>.
           </p>
           <div className="lp-hero-cta">
-            <Link href="/registro" className="lp-btn lp-btn-primary">
-              Empieza gratis — 14 días
+            <Link href="/app" className="lp-btn lp-btn-primary">
+              Pruébalo gratis ahora
             </Link>
-            <Link href="/app" className="lp-btn lp-btn-ghost">
-              Probar la demo →
-            </Link>
+            <a href="#planes" className="lp-btn lp-btn-ghost">
+              Para tu empresa →
+            </a>
           </div>
           <div className="lp-hero-note">
-            Sin tarjeta de crédito · sin instalar nada · pruébalo en 1 minuto
+            Sin crear cuenta · sin instalar nada · pruébalo en 1 minuto
           </div>
         </div>
 
@@ -104,33 +114,40 @@ export default function Landing() {
 
       {/* ---------- CÓMO FUNCIONA ---------- */}
       <section id="como-funciona" className="lp-section">
-        <h2 className="lp-h2">Tres pasos. Cero filtraciones.</h2>
+        <h2 className="lp-h2">Así de fácil. Y tus datos, protegidos.</h2>
         <div className="lp-steps">
           <div className="lp-step-card">
             <div className="lp-step-num">1</div>
-            <h3>Subes el documento</h3>
+            <h3>Subes tu documento</h3>
             <p>
-              Un PDF o texto: contrato, póliza, balance, ficha. Al instante
-              detectamos y reemplazamos los datos personales.
+              Un contrato, una boleta, un informe… lo subes y listo. No necesitas
+              instalar nada.
             </p>
           </div>
           <div className="lp-step-card">
             <div className="lp-step-num">2</div>
-            <h3>Preguntas en lenguaje normal</h3>
+            <h3>Haces tu pregunta</h3>
             <p>
-              Como si le hablaras a un colega. Sin comandos ni formatos
-              especiales — solo escribe tu duda.
+              Escribes lo que quieres saber con tus propias palabras, como si le
+              preguntaras a alguien.
             </p>
           </div>
           <div className="lp-step-card">
             <div className="lp-step-num">3</div>
             <h3>Recibes la respuesta</h3>
             <p>
-              Basada solo en tu documento. Y te mostramos exactamente qué datos
-              se mantuvieron privados.
+              Clara y al instante, tomada solo de tu documento. Y tus datos
+              privados quedan siempre protegidos.
             </p>
           </div>
         </div>
+      </section>
+
+      {/* ---------- DEMOSTRACIÓN ---------- */}
+      <section id="demo" className="lp-section">
+        <h2 className="lp-h2">Míralo funcionando</h2>
+        <p className="lp-sub">Un ejemplo real, en segundos.</p>
+        <DemoAnimada />
       </section>
 
       {/* ---------- POR RUBRO ---------- */}
@@ -184,7 +201,10 @@ export default function Landing() {
             <ul className="lp-checklist">
               <li>El proveedor de IA jamás ve un RUT real</li>
               <li>Lo que subes en la demo se elimina solo</li>
-              <li>Pensado para la Ley 21.719 de datos personales</li>
+              <li>
+                Diseñado pensando en la nueva ley chilena de protección de datos
+                personales (Ley 21.719)
+              </li>
             </ul>
           </div>
           <div className="lp-flow">
@@ -201,20 +221,156 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ---------- PLANES / EMPRESAS ---------- */}
+      <section id="planes" className="lp-section">
+        <h2 className="lp-h2">Empieza con una prueba. Crece a tu medida.</h2>
+        <p className="lp-sub">
+          Un modelo simple para equipos que trabajan con documentos de sus
+          clientes.
+        </p>
+        <div className="lp-planes">
+          <div className="lp-step-card lp-plan">
+            <div className="lp-plan-tag">1 · Demo</div>
+            <h3>Demo gratis</h3>
+            <div className="lp-plan-price">Ahora · sin cuenta</div>
+            <ul className="lp-checklist">
+              <li>Pruébala al instante en el navegador</li>
+              <li>Con documentos de ejemplo o los tuyos</li>
+              <li>Sin instalar nada</li>
+            </ul>
+          </div>
+          <div className="lp-step-card lp-plan lp-plan-featured">
+            <div className="lp-plan-tag">2 · A tu medida</div>
+            <h3>Piloto a tu medida</h3>
+            <div className="lp-plan-price">Consultar</div>
+            <ul className="lp-checklist">
+              <li>Lo adaptamos a tus tipos de documento</li>
+              <li>Un piloto con tu equipo, acompañado</li>
+              <li>Opción de instalarlo en tu propio servidor</li>
+            </ul>
+          </div>
+          <div className="lp-step-card lp-plan">
+            <div className="lp-plan-tag">3 · Mantención</div>
+            <h3>Mantención mensual</h3>
+            <div className="lp-plan-price">Consultar</div>
+            <ul className="lp-checklist">
+              <li>Soporte y actualizaciones</li>
+              <li>Nos encargamos de que siempre funcione</li>
+              <li>Mejoras según tus necesidades</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="lp-proximamente">
+          <span className="lp-badge">Próximamente</span>
+          Guarda tus documentos y consúltalos cuando quieras —
+          buscándolos por cliente o por documento— sin volver a subirlos.
+        </div>
+
+        <div className="lp-ley">
+          ⚖️ Diseñado pensando en la nueva ley chilena de protección de datos
+          personales (Ley 21.719).
+        </div>
+
+        <div className="lp-contacto">
+          <p>
+            ¿Lo quieres para tu empresa? Agenda una demo — te la mostramos en
+            menos de 10 minutos, sin compromiso.
+          </p>
+          <div className="lp-hero-cta lp-center">
+            <a className="lp-btn lp-btn-primary" href={MAILTO}>
+              ✉️ Escríbenos
+            </a>
+            <a
+              className="lp-btn lp-btn-soft"
+              href={WHATSAPP}
+              target="_blank"
+              rel="noreferrer"
+            >
+              💬 WhatsApp
+            </a>
+          </div>
+        </div>
+
+        <style>{`
+          .lp-planes {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 960px;
+            margin: 0 auto;
+          }
+          @media (max-width: 760px) {
+            .lp-planes { grid-template-columns: 1fr; }
+          }
+          .lp-plan { text-align: left; }
+          .lp-plan h3 { margin: 6px 0 2px; }
+          .lp-plan-tag {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            color: #9a7b3a;
+          }
+          .lp-plan-price {
+            font-size: 15px;
+            font-weight: 600;
+            color: #7a5b17;
+            margin-bottom: 10px;
+          }
+          .lp-plan-featured {
+            border: 2px solid #c9a24b;
+            box-shadow: 0 6px 24px rgba(160, 130, 60, .15);
+          }
+          .lp-proximamente {
+            max-width: 720px;
+            margin: 26px auto 0;
+            text-align: center;
+            font-size: 15px;
+            color: #5b6472;
+          }
+          .lp-badge {
+            display: inline-block;
+            background: rgba(201, 162, 75, .18);
+            color: #7a5b17;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .03em;
+            text-transform: uppercase;
+            padding: 2px 9px;
+            border-radius: 999px;
+            margin-right: 8px;
+          }
+          .lp-ley {
+            max-width: 720px;
+            margin: 10px auto 0;
+            text-align: center;
+            font-size: 14px;
+            color: #5b6472;
+          }
+          .lp-contacto {
+            max-width: 620px;
+            margin: 30px auto 0;
+            text-align: center;
+          }
+          .lp-contacto p { margin-bottom: 16px; }
+        `}</style>
+      </section>
+
       {/* ---------- CTA FINAL ---------- */}
       <section className="lp-final">
-        <h2>¿Listo para usarlo con tus propios documentos?</h2>
+        <h2>¿Listo para verlo con tus propios documentos?</h2>
         <p>
-          Crea tu cuenta y prueba DocuSeguro gratis durante 14 días. Sin tarjeta,
-          sin compromiso.
+          Pruébalo gratis ahora en la demo, o agenda una demo para tu empresa.
+          Sin compromiso.
         </p>
         <div className="lp-hero-cta lp-center">
-          <Link href="/registro" className="lp-btn lp-btn-primary">
-            Empieza gratis ahora
+          <Link href="/app" className="lp-btn lp-btn-primary">
+            Pruébalo gratis ahora
           </Link>
-          <Link href="/app" className="lp-btn lp-btn-ghost">
-            Ver la demo primero
-          </Link>
+          <a href="#planes" className="lp-btn lp-btn-ghost">
+            Agenda una demo
+          </a>
         </div>
       </section>
 

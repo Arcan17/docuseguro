@@ -1,10 +1,14 @@
-from uuid import uuid4
-
 from app.services.privacy.patterns import EMAIL_RE, PHONE_CL_RE, PII_PATTERNS, RUT_RE
 
-# token_map maps uuid_token → original_value
+# token_map maps readable_marker → original_value (e.g. "RUT_1" → "12.345.678-9")
 TokenMap = dict[str, str]
 ScrubResult = tuple[str, TokenMap, list[str]]
+
+# Readable, type-tagged marker labels. Semantic + short markers (e.g. [RUT_1]) let
+# the LLM keep track of which value is which and reproduce them verbatim — random
+# UUIDs were indistinguishable and got swapped, scrambling the data.
+_TYPE_LABEL = {"rut": "RUT", "email": "CORREO", "phone": "TELEFONO"}
+_NER_LABEL = "NOMBRE"
 
 
 class PIIScrubber:
@@ -19,19 +23,31 @@ class PIIScrubber:
                 pass  # fall back to regex only
 
     def scrub(self, text: str) -> ScrubResult:
-        """Replace PII with UUID tokens. Returns (clean_text, token_map, detected_types)."""
+        """Replace PII with readable type-tagged markers.
+
+        Returns (clean_text, token_map, detected_types), where token_map maps each
+        marker ("RUT_1", "CORREO_1", …) back to its original value. The same value
+        always gets the same marker; different values of the same type increment the
+        index.
+        """
         original_text = text
         token_map: TokenMap = {}
         clean = text
 
-        # Build reverse lookup to avoid creating duplicate tokens for same value
+        # Reverse lookup so the same value reuses its marker, and per-type counters.
         value_to_token: dict[str, str] = {}
+        counters: dict[str, int] = {}
 
-        for pattern, _ in PII_PATTERNS:
+        def new_marker(label: str) -> str:
+            counters[label] = counters.get(label, 0) + 1
+            return f"{label}_{counters[label]}"
+
+        for pattern, pii_type in PII_PATTERNS:
+            label = _TYPE_LABEL.get(pii_type, "DATO")
             for match in pattern.finditer(original_text):
                 original = match.group()
                 if original not in value_to_token:
-                    token = str(uuid4())
+                    token = new_marker(label)
                     value_to_token[original] = token
                     token_map[token] = original
 
@@ -46,7 +62,7 @@ class PIIScrubber:
                 if ent.label_ in {"PER", "ORG"}:
                     original = ent.text
                     if original not in value_to_token and "[" not in original:
-                        token = str(uuid4())
+                        token = new_marker(_NER_LABEL)
                         value_to_token[original] = token
                         token_map[token] = original
                         clean = clean.replace(original, f"[{token}]")

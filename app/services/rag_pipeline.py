@@ -14,6 +14,7 @@ from app.services.cache.query_cache import CacheService, make_cache_key
 from app.services.compression import compress_context
 from app.services.ingestion.embedder import embed_query
 from app.services.llm.base import LLMProvider
+from app.services.privacy.doc_pii import build_presentation, load_doc_maps
 from app.services.privacy.restorer import restore
 from app.services.privacy.scrubber import PIIScrubber
 from app.services.privacy.stream_restorer import StreamingRestorer
@@ -116,7 +117,9 @@ class RAGPipeline:
         # Scoped to this owner: demo docs + only this owner's own uploads.
         chunks = await search(query_embedding, n_results=5, session_id=search_owner)
 
-        if not chunks:
+        # Answer guardrail: no chunks, or the best match below the answer threshold →
+        # refuse without calling the LLM, so we never answer from outside the docs.
+        if not chunks or max(c.similarity for c in chunks) < settings.answer_min_similarity:
             latency = int((time.monotonic() - t0) * 1000)
             logger.info("no_context_found", session_id=session_id, latency_ms=latency)
             answer = "No encontré contexto relevante para responder esta consulta."
@@ -150,10 +153,20 @@ class RAGPipeline:
         context_str = "\n".join(c.text for c in sorted_chunks)
         cache_key = make_cache_key(clean_query, context_str)
 
+        # Restore PII of BOTH the query and the retrieved documents: load each
+        # document's PII map and re-label everything to a single readable set of
+        # presentation markers ([RUT_1] …). The LLM still sees only markers; the real
+        # values are restored via display_map in the final answer.
+        doc_maps = await load_doc_maps(self._db, {c.doc_id for c in sorted_chunks})
+        presentation = build_presentation(
+            [(c.text, c.doc_id) for c in sorted_chunks], doc_maps, clean_query, token_map
+        )
+        display_map = presentation.display_map
+
         # Step 5: Cache lookup
         cached = await self._cache.get(cache_key)
         if cached is not None:
-            answer = restore(cached, token_map)
+            answer = restore(cached, display_map)
             latency = int((time.monotonic() - t0) * 1000)
             logger.info("cache_hit", session_id=session_id, latency_ms=latency)
             await self._log_query(
@@ -181,15 +194,19 @@ class RAGPipeline:
                 compressed_tokens=None,
             )
 
-        # Step 6: Compress context (cache miss path)
-        compressed, original_tokens, compressed_tokens = compress_context(sorted_chunks)
+        # Step 6: Compress context (cache miss path) — using the re-labeled texts
+        relabeled_chunks = [
+            SearchResult(chunk_id=c.chunk_id, text=t, doc_id=c.doc_id, distance=c.distance)
+            for c, t in zip(sorted_chunks, presentation.chunk_texts)
+        ]
+        compressed, original_tokens, compressed_tokens = compress_context(relabeled_chunks)
 
-        # Step 7: LLM call — no PII in compressed context or clean_query
-        user_prompt = f"Context:\n{compressed}\n\nQuestion: {clean_query}"
+        # Step 7: LLM call — no PII in compressed context or query (only markers)
+        user_prompt = f"Context:\n{compressed}\n\nQuestion: {presentation.query_text}"
         raw_answer = await self._llm.complete(system=SYSTEM_PROMPT, user=user_prompt)
 
-        # Step 8: Restore PII in response
-        answer = restore(raw_answer, token_map)
+        # Step 8: Restore PII (query + document) in response
+        answer = restore(raw_answer, display_map)
 
         # Step 9: Write to cache
         await self._cache.set(cache_key, raw_answer)
@@ -283,7 +300,9 @@ class RAGPipeline:
         query_embedding = await embed_query(clean_query)
         chunks = await search(query_embedding, n_results=5, session_id=search_owner)
 
-        if not chunks:
+        # Answer guardrail (same as query()): refuse without the LLM when there is no
+        # sufficiently-relevant context, keeping answers grounded in the documents.
+        if not chunks or max(c.similarity for c in chunks) < settings.answer_min_similarity:
             yield {"type": "delta", "text": "No encontré contexto relevante para responder esta consulta."}
             latency = int((time.monotonic() - t0) * 1000)
             await self._log_query(
@@ -301,10 +320,18 @@ class RAGPipeline:
         context_str = "\n".join(c.text for c in sorted_chunks)
         cache_key = make_cache_key(clean_query, context_str)
 
+        # Re-label query + document PII to one readable set of presentation markers,
+        # and restore real values (query + document) via display_map. LLM sees markers.
+        doc_maps = await load_doc_maps(self._db, {c.doc_id for c in sorted_chunks})
+        presentation = build_presentation(
+            [(c.text, c.doc_id) for c in sorted_chunks], doc_maps, clean_query, token_map
+        )
+        display_map = presentation.display_map
+
         # Follow-ups depend on the conversation, so they bypass the answer cache.
         cached = None if history else await self._cache.get(cache_key)
         if cached is not None:
-            yield {"type": "delta", "text": restore(cached, token_map)}
+            yield {"type": "delta", "text": restore(cached, display_map)}
             latency = int((time.monotonic() - t0) * 1000)
             await self._log_query(
                 session_id=session_id, query_text=query_text, user_id=user_id,
@@ -318,11 +345,15 @@ class RAGPipeline:
             }
             return
 
-        compressed, original_tokens, compressed_tokens = compress_context(sorted_chunks)
+        relabeled_chunks = [
+            SearchResult(chunk_id=c.chunk_id, text=t, doc_id=c.doc_id, distance=c.distance)
+            for c, t in zip(sorted_chunks, presentation.chunk_texts)
+        ]
+        compressed, original_tokens, compressed_tokens = compress_context(relabeled_chunks)
         convo = f"Conversación previa:\n{history_block}\n\n" if history_block else ""
-        user_prompt = f"{convo}Context:\n{compressed}\n\nQuestion: {clean_query}"
+        user_prompt = f"{convo}Context:\n{compressed}\n\nQuestion: {presentation.query_text}"
 
-        restorer = StreamingRestorer(token_map)
+        restorer = StreamingRestorer(display_map)
         raw_parts: list[str] = []
         async for delta in self._llm.stream(system=SYSTEM_PROMPT, user=user_prompt):
             raw_parts.append(delta)

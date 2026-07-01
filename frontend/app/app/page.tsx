@@ -246,13 +246,11 @@ export default function DemoApp() {
         <h1>
           Pregúntale lo que sea a tus documentos.
           <br />
-          <span className="grad">Sin filtrar datos sensibles.</span>
+          <span className="grad">Sin exponer tus datos privados.</span>
         </h1>
         <p>
-          DocuSeguro borra los datos privados (RUT, correos, teléfonos){" "}
-          <strong>antes</strong> de que cualquier texto llegue a un LLM externo.
-          Sube un documento, pregunta en lenguaje natural y mira exactamente qué
-          se mantuvo privado.
+          Sube un documento y pregúntale lo que quieras. Tus datos privados
+          quedan <strong>protegidos</strong>.
         </p>
       </section>
 
@@ -286,21 +284,21 @@ export default function DemoApp() {
           <input
             ref={fileInput}
             type="file"
-            accept=".pdf,.txt,.docx,.xlsx"
+            accept=".pdf,.txt,.docx,.xlsx,.pptx,.csv"
             hidden
             onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
           />
           <div style={{ fontSize: 15, marginBottom: 4 }}>
             {uploading
-              ? "Borrando datos privados e indexando…"
-              : "Arrastra un PDF, Word, Excel o .txt aquí, o haz clic para elegir"}
+              ? "Protegiendo tus datos…"
+              : "Arrastra tu documento aquí, o haz clic para elegir"}
           </div>
           <div className="hint">
             O sáltatelo — la demo ya tiene documentos de RR.HH. de ejemplo
             cargados.
           </div>
           <div className="hint" style={{ marginTop: 6, fontSize: 11.5, opacity: 0.7 }}>
-            Máx. 10 MB · PDF, Word, Excel, TXT · 1 archivo por sesión
+            Máx. 10 MB · PDF, Word, Excel, PowerPoint, CSV, TXT · 1 archivo por sesión
           </div>
         </div>
         <div className="hint" style={{ marginTop: 10, fontSize: 12.5 }}>
@@ -406,7 +404,7 @@ export default function DemoApp() {
             {res.cache_hit ? (
               <span className="metric green">⚡ Respuesta en caché</span>
             ) : (
-              <span className="metric">🧠 Consulta nueva al LLM</span>
+              <span className="metric">🧠 Nueva consulta a la IA</span>
             )}
             <span className="metric indigo">⏱ {res.latency_ms} ms</span>
             {res.tokens_saved_pct != null && (
@@ -456,11 +454,11 @@ export default function DemoApp() {
       {res && !userEmail && (
         <div className="signup-cta">
           <div>
-            <strong>¿Te sirvió?</strong> Crea una cuenta gratis para guardar tus
-            documentos y tu historial — 14 días de prueba, sin tarjeta.
+            <strong>¿Te sirvió?</strong> Podemos adaptarlo a los documentos de tu
+            empresa y montarte un piloto.
           </div>
-          <Link href="/registro" className="primary-link">
-            Crear cuenta gratis
+          <Link href="/#planes" className="primary-link">
+            Para tu empresa
           </Link>
         </div>
       )}
@@ -470,7 +468,7 @@ export default function DemoApp() {
         <a href={`${API_BASE}/docs`} target="_blank" rel="noreferrer">
           la API de DocuSeguro
         </a>{" "}
-        · los embeddings corren localmente · el LLM nunca ve tus datos privados
+        · tu documento se procesa de forma privada · la IA nunca ve tus datos personales
         <br />
         <Link href="/privacidad" className="legal-link">
           Aviso de privacidad

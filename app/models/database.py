@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 # Import models so Base.metadata includes all tables
+import app.models.doc_pii_token  # noqa: F401
 import app.models.document  # noqa: F401
 import app.models.pii_token  # noqa: F401
 import app.models.query_cache  # noqa: F401

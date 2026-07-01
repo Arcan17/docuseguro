@@ -32,6 +32,12 @@ class Settings(BaseSettings):
 
     # RAG tuning
     cosine_similarity_threshold: float = 0.50
+    # Answer guardrail: if the best retrieved chunk's similarity is below this, the
+    # system refuses ("no está en tus documentos") WITHOUT calling the LLM. Default
+    # equals the retrieval threshold, so it is a no-op until raised — the local
+    # embedding model compresses Spanish scores into a narrow band, so a stricter
+    # value risks false refusals. Raise it per-deployment when embeddings improve.
+    answer_min_similarity: float = 0.50
     chunk_size: int = 800
     chunk_overlap: int = 150
     max_context_tokens: int = 1500

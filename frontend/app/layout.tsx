@@ -18,7 +18,7 @@ const lora = Lora({
 export const metadata: Metadata = {
   title: "DocuSeguro — Consulta tus documentos sin filtrar datos privados",
   description:
-    "Haz preguntas a tus documentos internos en lenguaje natural — sin que ningún dato sensible llegue a un LLM externo.",
+    "Hazle preguntas a tus documentos con tus propias palabras y recibe respuestas al instante, manteniendo tus datos privados protegidos.",
 };
 
 export default function RootLayout({
