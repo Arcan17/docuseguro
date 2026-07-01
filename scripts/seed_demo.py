@@ -16,6 +16,7 @@ async def seed_if_empty() -> None:
     from app.services.ingestion.chunker import semantic_chunk
     from app.services.ingestion.embedder import embed_chunks
     from app.services.ingestion.extractor import extract_text
+    from app.services.privacy.doc_pii import persist_doc_map
     from app.services.privacy.scrubber import PIIScrubber
     from app.services.vector_store import upsert_chunks, vector_count
 
@@ -45,13 +46,16 @@ async def seed_if_empty() -> None:
         for doc_path in docs:
             content = doc_path.read_bytes()
             text = extract_text(content, doc_path.name)
-            clean_text, _token_map, pii_types = scrubber.scrub(text)
+            clean_text, token_map, pii_types = scrubber.scrub(text)
             chunks = semantic_chunk(clean_text, doc_id=doc_path.stem)
             embeddings = await embed_chunks(chunks)
             # Demo docs are shared and never expired (visible to every visitor).
             await upsert_chunks(
                 doc_path.stem, chunks, embeddings, metadata_extra={"source": "demo"}
             )
+            # Keep the doc's PII map so its identifiers (RUT, correo, teléfono)
+            # restore to real values in answers. Demo docs never expire.
+            await persist_doc_map(db, doc_path.stem, token_map, None)
 
             doc = Document(
                 filename=doc_path.name,
