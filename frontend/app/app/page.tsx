@@ -454,11 +454,11 @@ export default function DemoApp() {
       {res && !userEmail && (
         <div className="signup-cta">
           <div>
-            <strong>¿Te sirvió?</strong> Crea una cuenta gratis para guardar tus
-            documentos y tu historial — 14 días de prueba, sin tarjeta.
+            <strong>¿Te sirvió?</strong> Podemos adaptarlo a los documentos de tu
+            empresa y montarte un piloto.
           </div>
-          <Link href="/registro" className="primary-link">
-            Crear cuenta gratis
+          <Link href="/#planes" className="primary-link">
+            Para tu empresa
           </Link>
         </div>
       )}

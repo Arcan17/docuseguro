@@ -67,15 +67,15 @@ export default function Landing() {
             teléfono) quedan <strong>ocultos y protegidos</strong>.
           </p>
           <div className="lp-hero-cta">
-            <Link href="/registro" className="lp-btn lp-btn-primary">
-              Empieza gratis — 14 días
+            <Link href="/app" className="lp-btn lp-btn-primary">
+              Pruébalo gratis ahora
             </Link>
-            <Link href="/app" className="lp-btn lp-btn-ghost">
-              Probar la demo →
-            </Link>
+            <a href="#planes" className="lp-btn lp-btn-ghost">
+              Para tu empresa →
+            </a>
           </div>
           <div className="lp-hero-note">
-            Sin tarjeta de crédito · sin instalar nada · pruébalo en 1 minuto
+            Sin crear cuenta · sin instalar nada · pruébalo en 1 minuto
           </div>
         </div>
 
@@ -227,22 +227,22 @@ export default function Landing() {
         </p>
         <div className="lp-planes">
           <div className="lp-step-card lp-plan">
-            <div className="lp-plan-tag">1 · Prueba</div>
-            <h3>Prueba gratis</h3>
-            <div className="lp-plan-price">14 días · sin tarjeta</div>
+            <div className="lp-plan-tag">1 · Demo</div>
+            <h3>Demo gratis</h3>
+            <div className="lp-plan-price">Ahora · sin cuenta</div>
             <ul className="lp-checklist">
-              <li>Súbelo y pruébalo con tu equipo</li>
+              <li>Pruébala al instante en el navegador</li>
+              <li>Con documentos de ejemplo o los tuyos</li>
               <li>Sin instalar nada</li>
-              <li>Sin compromiso</li>
             </ul>
           </div>
           <div className="lp-step-card lp-plan lp-plan-featured">
             <div className="lp-plan-tag">2 · A tu medida</div>
-            <h3>Ajuste a medida</h3>
+            <h3>Piloto a tu medida</h3>
             <div className="lp-plan-price">Consultar</div>
             <ul className="lp-checklist">
               <li>Lo adaptamos a tus tipos de documento</li>
-              <li>A tu forma de trabajar y tu marca</li>
+              <li>Un piloto con tu equipo, acompañado</li>
               <li>Opción de instalarlo en tu propio servidor</li>
             </ul>
           </div>
@@ -319,18 +319,18 @@ export default function Landing() {
 
       {/* ---------- CTA FINAL ---------- */}
       <section className="lp-final">
-        <h2>¿Listo para usarlo con tus propios documentos?</h2>
+        <h2>¿Listo para verlo con tus propios documentos?</h2>
         <p>
-          Crea tu cuenta y prueba DocuSeguro gratis durante 14 días. Sin tarjeta,
-          sin compromiso.
+          Pruébalo gratis ahora en la demo, o agenda una demo para tu empresa.
+          Sin compromiso.
         </p>
         <div className="lp-hero-cta lp-center">
-          <Link href="/registro" className="lp-btn lp-btn-primary">
-            Empieza gratis ahora
+          <Link href="/app" className="lp-btn lp-btn-primary">
+            Pruébalo gratis ahora
           </Link>
-          <Link href="/app" className="lp-btn lp-btn-ghost">
-            Ver la demo primero
-          </Link>
+          <a href="#planes" className="lp-btn lp-btn-ghost">
+            Agenda una demo
+          </a>
         </div>
       </section>
 
