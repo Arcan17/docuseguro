@@ -1,6 +1,7 @@
 """Embedder using fastembed (local ONNX — no API key required).
 
-Model: BAAI/bge-small-en-v1.5 — 384-dim, ~24MB, downloaded on first use.
+Model: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 — 384-dim,
+multilingual (entiende español), downloaded on first use.
 """
 from __future__ import annotations
 

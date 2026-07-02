@@ -104,7 +104,7 @@ def test_similarity_property_equals_one_minus_distance() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 2. Retrieval quality — real fastembed embeddings (BAAI/bge-small-en-v1.5)
+# 2. Retrieval quality — real fastembed embeddings (multilingual MiniLM-L12)
 #    Controlled HR-policy eval dataset: 3 documents, 3 paired queries.
 # ---------------------------------------------------------------------------
 
@@ -144,7 +144,7 @@ def chroma384(tmp_path):
     with patch("app.services.vector_store.settings") as s:
         s.chroma_path = str(tmp_path / "chroma384")
         s.chroma_collection = "eval_384"
-        s.cosine_similarity_threshold = 0.75
+        s.cosine_similarity_threshold = 0.40
         import app.services.vector_store as vs
 
         vs._client = None
@@ -173,7 +173,7 @@ def corpus(chroma384):
 async def test_relevant_query_retrieves_matching_chunk(corpus, item: dict) -> None:
     """Each query must retrieve its paired document within the top-3 results."""
     query_emb = _embed_sync([item["query"]])[0]
-    results = await search(query_emb, n_results=3, threshold=0.75)
+    results = await search(query_emb, n_results=3, threshold=0.40)
     retrieved = [r.chunk_id for r in results]
     assert f"{item['id']}_0" in retrieved, (
         f"Expected '{item['id']}_0' for query '{item['query']}'. Got: {retrieved}"
@@ -184,7 +184,7 @@ async def test_precision_at_1_across_corpus(corpus) -> None:
     """Top-ranked result for every eval query must be its own document (Precision@1 = 1.0)."""
     for item in _EVAL_CORPUS:
         query_emb = _embed_sync([item["query"]])[0]
-        results = await search(query_emb, n_results=3, threshold=0.75)
+        results = await search(query_emb, n_results=3, threshold=0.40)
         assert results, f"No results above threshold for: {item['query']}"
         assert results[0].chunk_id == f"{item['id']}_0", (
             f"Precision@1 failed for '{item['id']}': "
@@ -195,7 +195,7 @@ async def test_precision_at_1_across_corpus(corpus) -> None:
 async def test_unrelated_query_returns_no_results(corpus) -> None:
     """A query with no semantic overlap with the HR corpus must return zero chunks."""
     query_emb = _embed_sync([_UNRELATED_QUERY])[0]
-    results = await search(query_emb, n_results=5, threshold=0.75)
+    results = await search(query_emb, n_results=5, threshold=0.40)
     assert results == [], (
         f"Expected empty results for unrelated query, got: {[r.chunk_id for r in results]}"
     )

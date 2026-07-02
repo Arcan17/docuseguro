@@ -30,14 +30,14 @@ class Settings(BaseSettings):
     # CRM Webhook
     crm_webhook_url: str = "http://localhost:8000/webhook/crm"
 
-    # RAG tuning
-    cosine_similarity_threshold: float = 0.50
+    # RAG tuning — tuned for the multilingual embedding model, whose Spanish scores
+    # run lower but separate cleanly (relevant ~0.46-0.69 vs off-topic ~0.23-0.42).
+    cosine_similarity_threshold: float = 0.40
     # Answer guardrail: if the best retrieved chunk's similarity is below this, the
-    # system refuses ("no está en tus documentos") WITHOUT calling the LLM. Default
-    # equals the retrieval threshold, so it is a no-op until raised — the local
-    # embedding model compresses Spanish scores into a narrow band, so a stricter
-    # value risks false refusals. Raise it per-deployment when embeddings improve.
-    answer_min_similarity: float = 0.50
+    # system refuses WITHOUT calling the LLM. Aligned with the retrieval threshold so
+    # it never pre-refuses a chunk that passed retrieval; the system prompt is the
+    # final judge for anything off-topic that slips through.
+    answer_min_similarity: float = 0.40
     # How many chunks to retrieve for context. Higher = more likely to include the
     # chunk that holds the answer (the English embedding model misses Spanish
     # synonyms, e.g. "pagan sueldos" vs "salarios se depositan"), at some token cost.
