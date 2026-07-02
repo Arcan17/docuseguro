@@ -115,7 +115,7 @@ class RAGPipeline:
 
         # Step 3: Retrieve chunks with cosine similarity threshold.
         # Scoped to this owner: demo docs + only this owner's own uploads.
-        chunks = await search(query_embedding, n_results=5, session_id=search_owner)
+        chunks = await search(query_embedding, n_results=settings.retrieval_top_k, session_id=search_owner)
 
         # Answer guardrail: no chunks, or the best match below the answer threshold →
         # refuse without calling the LLM, so we never answer from outside the docs.
@@ -298,7 +298,7 @@ class RAGPipeline:
             await self._persist_pii_tokens(session_id, token_map, pii_types)
 
         query_embedding = await embed_query(clean_query)
-        chunks = await search(query_embedding, n_results=5, session_id=search_owner)
+        chunks = await search(query_embedding, n_results=settings.retrieval_top_k, session_id=search_owner)
 
         # Answer guardrail (same as query()): refuse without the LLM when there is no
         # sufficiently-relevant context, keeping answers grounded in the documents.

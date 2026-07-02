@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     # embedding model compresses Spanish scores into a narrow band, so a stricter
     # value risks false refusals. Raise it per-deployment when embeddings improve.
     answer_min_similarity: float = 0.50
+    # How many chunks to retrieve for context. Higher = more likely to include the
+    # chunk that holds the answer (the English embedding model misses Spanish
+    # synonyms, e.g. "pagan sueldos" vs "salarios se depositan"), at some token cost.
+    retrieval_top_k: int = 8
     chunk_size: int = 800
     chunk_overlap: int = 150
     max_context_tokens: int = 1500
